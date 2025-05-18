@@ -15,7 +15,7 @@ int main() {
         for (int i = 0; i < 1000; ++i) {
             continue;
         }
-        LED_heartbeat_G();
+        LED_heartbeat_R();
         for (int i = 0; i < 1000; ++i) {
             continue;
         }
