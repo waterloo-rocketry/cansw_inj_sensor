@@ -1,10 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="65">
   <logicalFolder name="root" displayName="root" projectFiles="true">
+    <logicalFolder name="canlib" displayName="canlib" projectFiles="true">
+      <logicalFolder name=".github" displayName=".github" projectFiles="true">
+        <logicalFolder name="workflows" displayName="workflows" projectFiles="true">
+        </logicalFolder>
+      </logicalFolder>
+      <logicalFolder name="message" displayName="message" projectFiles="true">
+        <itemPath>canlib/message/msg_state_est.c</itemPath>
+        <itemPath>canlib/message/msg_general.c</itemPath>
+        <itemPath>canlib/message/msg_sensor.c</itemPath>
+        <itemPath>canlib/message/msg_common.c</itemPath>
+        <itemPath>canlib/message/msg_actuator.c</itemPath>
+        <itemPath>canlib/message/msg_gps.c</itemPath>
+        <itemPath>canlib/message/msg_recovery.c</itemPath>
+        <itemPath>canlib/message/msg_common.h</itemPath>
+        <itemPath>canlib/message/msg_recovery.h</itemPath>
+        <itemPath>canlib/message/msg_gps.h</itemPath>
+        <itemPath>canlib/message/msg_actuator.h</itemPath>
+        <itemPath>canlib/message/msg_state_est.h</itemPath>
+        <itemPath>canlib/message/msg_general.h</itemPath>
+        <itemPath>canlib/message/msg_sensor.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="pic18f26k83" displayName="pic18f26k83" projectFiles="true">
+        <itemPath>canlib/pic18f26k83/pic18f26k83_can.c</itemPath>
+        <itemPath>canlib/pic18f26k83/pic18f26k83_can.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="scripts" displayName="scripts" projectFiles="true">
+      </logicalFolder>
+      <logicalFolder name="util" displayName="util" projectFiles="true">
+        <itemPath>canlib/util/can_rcv_buffer.c</itemPath>
+        <itemPath>canlib/util/can_tx_buffer.c</itemPath>
+        <itemPath>canlib/util/safe_ring_buffer.c</itemPath>
+        <itemPath>canlib/util/timing_util.c</itemPath>
+        <itemPath>canlib/util/safe_ring_buffer.h</itemPath>
+        <itemPath>canlib/util/timing_util.h</itemPath>
+        <itemPath>canlib/util/can_tx_buffer.h</itemPath>
+        <itemPath>canlib/util/can_rcv_buffer.h</itemPath>
+      </logicalFolder>
+      <itemPath>canlib/message_types.h</itemPath>
+      <itemPath>canlib/can.h</itemPath>
+      <itemPath>canlib/canlib.h</itemPath>
+    </logicalFolder>
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
       <itemPath>sensor_general.h</itemPath>
+      <itemPath>error_checks.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -15,13 +57,65 @@
                    displayName="Linker Files"
                    projectFiles="true">
     </logicalFolder>
+    <logicalFolder name="mcc_generated_files"
+                   displayName="mcc_generated_files"
+                   projectFiles="true">
+      <logicalFolder name="adc" displayName="adc" projectFiles="true">
+        <logicalFolder name="src" displayName="src" projectFiles="true">
+          <itemPath>mcc_generated_files/adc/src/adcc.c</itemPath>
+        </logicalFolder>
+        <itemPath>mcc_generated_files/adc/adcc.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="fvr" displayName="fvr" projectFiles="true">
+        <logicalFolder name="src" displayName="src" projectFiles="true">
+          <itemPath>mcc_generated_files/fvr/src/fvr.c</itemPath>
+        </logicalFolder>
+        <itemPath>mcc_generated_files/fvr/fvr.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="system" displayName="system" projectFiles="true">
+        <logicalFolder name="src" displayName="src" projectFiles="true">
+          <itemPath>mcc_generated_files/system/src/interrupt.c</itemPath>
+          <itemPath>mcc_generated_files/system/src/system.c</itemPath>
+          <itemPath>mcc_generated_files/system/src/config_bits.c</itemPath>
+          <itemPath>mcc_generated_files/system/src/clock.c</itemPath>
+          <itemPath>mcc_generated_files/system/src/pins.c</itemPath>
+        </logicalFolder>
+        <itemPath>mcc_generated_files/system/pins.h</itemPath>
+        <itemPath>mcc_generated_files/system/interrupt.h</itemPath>
+        <itemPath>mcc_generated_files/system/system.h</itemPath>
+        <itemPath>mcc_generated_files/system/clock.h</itemPath>
+        <itemPath>mcc_generated_files/system/config_bits.h</itemPath>
+      </logicalFolder>
+    </logicalFolder>
+    <logicalFolder name="rocketlib" displayName="rocketlib" projectFiles="true">
+      <logicalFolder name="common" displayName="common" projectFiles="true">
+        <itemPath>rocketlib/common/low_pass_filter.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="include" displayName="include" projectFiles="true">
+        <itemPath>rocketlib/include/electrical.h</itemPath>
+        <itemPath>rocketlib/include/common.h</itemPath>
+        <itemPath>rocketlib/include/low_pass_filter.h</itemPath>
+        <itemPath>rocketlib/include/timer.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="pic18f26k83" displayName="pic18f26k83" projectFiles="true">
+        <itemPath>rocketlib/pic18f26k83/timer.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="scripts" displayName="scripts" projectFiles="true">
+      </logicalFolder>
+    </logicalFolder>
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>main.c</itemPath>
       <itemPath>sensor_general.c</itemPath>
+      <itemPath>error_checks.c</itemPath>
     </logicalFolder>
   </logicalFolder>
+  <sourceRootList>
+    <Elem>canlib</Elem>
+    <Elem>rocketlib</Elem>
+    <Elem>mcc_generated_files</Elem>
+  </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="default" type="2">
@@ -71,9 +165,10 @@
         <property key="call-prologues" value="false"/>
         <property key="default-bitfield-type" value="true"/>
         <property key="default-char-type" value="true"/>
-        <property key="define-macros" value=""/>
+        <property key="define-macros"
+                  value="BOARD_TYPE_UNIQUE_ID=BOARD_TYPE_ID_INJ_SENSOR;BOARD_INST_UNIQUE_ID=BOARD_INST_ID_GENERIC"/>
         <property key="disable-optimizations" value="true"/>
-        <property key="extra-include-directories" value=""/>
+        <property key="extra-include-directories" value="canlib;rocketlib/include"/>
         <property key="favor-optimization-for" value="-speed,+space"/>
         <property key="garbage-collect-data" value="true"/>
         <property key="garbage-collect-functions" value="true"/>
@@ -159,6 +254,59 @@
         <property key="program-the-device-with-default-config-words" value="false"/>
         <property key="remove-unused-sections" value="true"/>
       </HI-TECH-LINK>
+      <Tool>
+        <property key="AutoSelectMemRanges" value="auto"/>
+        <property key="Freeze Peripherals" value="true"/>
+        <property key="ToolFirmwareFilePath"
+                  value="Press to browse for a specific firmware version"/>
+        <property key="ToolFirmwareOption.UpdateOptions"
+                  value="ToolFirmwareOption.UseLatest"/>
+        <property key="ToolFirmwareToolPack"
+                  value="Press to select which tool pack to use"/>
+        <property key="communication.interface" value=""/>
+        <property key="communication.interface.jtag" value="2wire"/>
+        <property key="communication.speed" value="${communication.speed.default}"/>
+        <property key="debugoptions.debug-startup" value="Use system settings"/>
+        <property key="debugoptions.reset-behaviour" value="Use system settings"/>
+        <property key="debugoptions.simultaneous.debug" value="false"/>
+        <property key="debugoptions.useswbreakpoints" value="false"/>
+        <property key="event.recorder.debugger.behavior" value="Running"/>
+        <property key="event.recorder.enabled" value="false"/>
+        <property key="event.recorder.scvd.files" value=""/>
+        <property key="freeze.timers" value="false"/>
+        <property key="lastid" value=""/>
+        <property key="memories.aux" value="false"/>
+        <property key="memories.bootflash" value="true"/>
+        <property key="memories.configurationmemory" value="true"/>
+        <property key="memories.configurationmemory2" value="true"/>
+        <property key="memories.dataflash" value="true"/>
+        <property key="memories.eeprom" value="true"/>
+        <property key="memories.exclude.configurationmemory" value="true"/>
+        <property key="memories.flashdata" value="true"/>
+        <property key="memories.id" value="true"/>
+        <property key="memories.instruction.ram.ranges"
+                  value="${memories.instruction.ram.ranges}"/>
+        <property key="memories.programmemory" value="true"/>
+        <property key="memories.programmemory.ranges" value="0-ffff"/>
+        <property key="programoptions.donoteraseauxmem" value="false"/>
+        <property key="programoptions.eraseb4program" value="true"/>
+        <property key="programoptions.pgmentry.voltage" value="low"/>
+        <property key="programoptions.pgmspeed" value="Med"/>
+        <property key="programoptions.preservedataflash" value="false"/>
+        <property key="programoptions.preservedataflash.ranges"
+                  value="${memories.dataflash.default}"/>
+        <property key="programoptions.preserveeeprom" value="false"/>
+        <property key="programoptions.preserveeeprom.ranges" value="310000-3103ff"/>
+        <property key="programoptions.preserveprogram.ranges" value=""/>
+        <property key="programoptions.preserveprogramrange" value="false"/>
+        <property key="programoptions.programcalmem" value="false"/>
+        <property key="programoptions.programuserotp" value="false"/>
+        <property key="programoptions.testmodeentrymethod" value="VDDFirst"/>
+        <property key="toolpack.updateoptions"
+                  value="toolpack.updateoptions.uselatestoolpack"/>
+        <property key="toolpack.updateoptions.packversion"
+                  value="Press to select which tool pack to use"/>
+      </Tool>
       <XC8-CO>
         <property key="coverage-enable" value=""/>
         <property key="stack-guidance" value="false"/>
@@ -181,6 +329,61 @@
         <property key="user-pack-device-support" value=""/>
         <property key="wpo-lto" value="false"/>
       </XC8-config-global>
+      <item path="rocketlib/include/timer.h" ex="true" overriding="false">
+      </item>
+      <snap>
+        <property key="AutoSelectMemRanges" value="auto"/>
+        <property key="Freeze Peripherals" value="true"/>
+        <property key="ToolFirmwareFilePath"
+                  value="Press to browse for a specific firmware version"/>
+        <property key="ToolFirmwareOption.UpdateOptions"
+                  value="ToolFirmwareOption.UseLatest"/>
+        <property key="ToolFirmwareToolPack"
+                  value="Press to select which tool pack to use"/>
+        <property key="communication.interface" value=""/>
+        <property key="communication.interface.jtag" value="2wire"/>
+        <property key="communication.speed" value="${communication.speed.default}"/>
+        <property key="debugoptions.debug-startup" value="Use system settings"/>
+        <property key="debugoptions.reset-behaviour" value="Use system settings"/>
+        <property key="debugoptions.simultaneous.debug" value="false"/>
+        <property key="debugoptions.useswbreakpoints" value="false"/>
+        <property key="event.recorder.debugger.behavior" value="Running"/>
+        <property key="event.recorder.enabled" value="false"/>
+        <property key="event.recorder.scvd.files" value=""/>
+        <property key="freeze.timers" value="false"/>
+        <property key="lastid" value=""/>
+        <property key="memories.aux" value="false"/>
+        <property key="memories.bootflash" value="true"/>
+        <property key="memories.configurationmemory" value="true"/>
+        <property key="memories.configurationmemory2" value="true"/>
+        <property key="memories.dataflash" value="true"/>
+        <property key="memories.eeprom" value="true"/>
+        <property key="memories.exclude.configurationmemory" value="true"/>
+        <property key="memories.flashdata" value="true"/>
+        <property key="memories.id" value="true"/>
+        <property key="memories.instruction.ram.ranges"
+                  value="${memories.instruction.ram.ranges}"/>
+        <property key="memories.programmemory" value="true"/>
+        <property key="memories.programmemory.ranges" value="0-ffff"/>
+        <property key="programoptions.donoteraseauxmem" value="false"/>
+        <property key="programoptions.eraseb4program" value="true"/>
+        <property key="programoptions.pgmentry.voltage" value="low"/>
+        <property key="programoptions.pgmspeed" value="Med"/>
+        <property key="programoptions.preservedataflash" value="false"/>
+        <property key="programoptions.preservedataflash.ranges"
+                  value="${memories.dataflash.default}"/>
+        <property key="programoptions.preserveeeprom" value="false"/>
+        <property key="programoptions.preserveeeprom.ranges" value="310000-3103ff"/>
+        <property key="programoptions.preserveprogram.ranges" value=""/>
+        <property key="programoptions.preserveprogramrange" value="false"/>
+        <property key="programoptions.programcalmem" value="false"/>
+        <property key="programoptions.programuserotp" value="false"/>
+        <property key="programoptions.testmodeentrymethod" value="VDDFirst"/>
+        <property key="toolpack.updateoptions"
+                  value="toolpack.updateoptions.uselatestoolpack"/>
+        <property key="toolpack.updateoptions.packversion"
+                  value="Press to select which tool pack to use"/>
+      </snap>
     </conf>
   </confs>
 </configurationDescriptor>

@@ -5,8 +5,8 @@
 #include "sensor_general.h"
 
 void LED_init(void) {
-    TRISA4 = 0; // set A4 as output
-    LATA4 = 1; // LED off by default
+    TRISB4 = 0; // set A4 as output
+    LATB4 = 1; // LED off by default
 }
 
 
