@@ -1,14 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <stdbool.h>
 
 #include "canlib/canlib.h"
+#include "canlib/message_types.h"
 
 #include "mcc_generated_files/system/system.h"
 
 #include "sensor_general.h"
-
 #include "timer.h"
 
 //#include "IOExpanderDriver.h"
@@ -18,25 +17,159 @@
 
 #include <xc.h>
 
+// Do we need this? 
+#define MAX_BUS_DEAD_TIME_ms 1000
+
 
 // Set any of these to zero to disable
-#define STATUS_TIME_DIFF_ms 500 // 2 Hz
+#define STATUS_TIME_DIFF_ms 500 
+
+
+/* Sets ADC channels for current sense (these currently cannot be tested without board)
+adcc_channel_t current_sense_5v = channel_ANC3; // NOTE: adcc.h was modified to add register for pin C3 adc 
+adcc_channel_t current_sense_12v = channel_ANC2; //
+// adcc_channel_t batt_vol_sense = channel_AN; No batt voltage sense currently
+*/
+
+
+#define PRES_PNEUMATICS_TIME_DIFF_ms 250 // 4 Hz
+#define PRES_FUEL_TIME_DIFF_ms 16 // 64 Hz
+#define PRES_CC_1_TIME_DIFF_ms 16 // 64 Hz
+#define PRES_CC_2_TIME_DIFF_ms 16 // 64 Hz
+#define HALLSENSE_FUEL_TIME_DIFF_ms 250 // 4 Hz
+#define HALLSENSE_OX_TIME_DIFF_ms 250 // 4 Hz
+
+
+adcc_channel_t pres_cc1 = channel_ANB0;
+adcc_channel_t pres_cc2 = channel_ANB1;
+adcc_channel_t pres_ox = channel_ANB2;
+adcc_channel_t pres_fuel = channel_ANB3;
+adcc_channel_t hallsense_ox = channel_ANB4;
+adcc_channel_t hallsense_fuel = channel_ANB5;
+
+/* TODO
+ - Double check voltage at PT ADC
+    - Single 100ohm resistor in series; PT behaves like current source(?), so just use ohm's law 
+ - DP FVRCON
+ - const float vref = 4.096; 
+- check if crystal oscillator has correct specfiications (see table 45-9 in datashset) 
+ 
+ 
+ */
+
+// 7.2.1.4 --> 4xPLL 
+ 
+// Sets fixed reference voltage for ADC, see section 35.0 
+FVRCON = 0xC3;
+RSTOSC = 2;
+
+// sets oscillator to use external crystal in 4xPLL mode, section 5.2 
+// Configuration word 1L
+uint8_t* OSC_SET = 0x300000; 
+
+*OSC_SET = 0b 0 010 0 010; 
+
+
+
+// interrupt handler for millis and timer.h
+static void __interrupt() interrupt_handler() {
+    if (PIR5) {
+        can_handle_interrupt();
+    }
+
+    // Timer0 has overflowed - update millis() function
+    // This happens approximately every 500us
+    if (PIE3bits.TMR0IE == 1 && PIR3bits.TMR0IF == 1) {
+        timer0_handle_interrupt();
+        PIR3bits.TMR0IF = 0;
+    }
+}
+
+// Send a CAN message with nominal status
+static void send_status_ok(void) {
+    can_msg_t board_stat_msg;
+    build_board_stat_msg(millis(), E_NOMINAL, NULL, 0, &board_stat_msg);
+
+    txb_enqueue(&board_stat_msg);
+}
+
+// EDIT THIS
+static void can_msg_handler(const can_msg_t *msg) {
+    seen_can_message = true;
+    uint16_t msg_type = get_message_type(msg);
+    int dest_id = -1;
+    int cmd_type = -1;
+    // ignore messages that were sent from this board
+    if (get_board_unique_id(msg) == BOARD_UNIQUE_ID) {
+        return;
+    }
+
+    // make able to handle multiple actuator
+    switch (msg_type) {
+        // Make it handle multiple actuator
+        case MSG_ACTUATOR_CMD:
+            // see message_types.h for message format
+            // vent position will be updated synchronously
+
+#if (BOARD_UNIQUE_ID == BOARD_ID_PROPULSION_INJ)
+            if (get_actuator_id(msg) == ACTUATOR_INJECTOR_VALVE) {
+                requested_actuator_state_inj = get_req_actuator_state(msg);
+                seen_can_command = true;
+            } else if (get_actuator_id(msg) == ACTUATOR_FILL_DUMP_VALVE) {
+                requested_actuator_state_fill = get_req_actuator_state(msg);
+                seen_can_command = true;
+            }
+#elif (BOARD_UNIQUE_ID == BOARD_ID_PROPULSION_VENT)
+            if (get_actuator_id(msg) == ACTUATOR_VENT_VALVE) {
+                requested_actuator_state_vent = get_req_actuator_state(msg);
+                seen_can_command = true;
+            }
+#endif
+
+            break;
+
+        case MSG_LEDS_ON:
+            LED_ON_G();
+            LED_ON_B();
+            LED_ON_R();
+            break;
+
+        case MSG_LEDS_OFF:
+            LED_OFF_G();
+            LED_OFF_B();
+            LED_OFF_R();
+            break;
+
+        case MSG_RESET_CMD:
+            dest_id = get_reset_board_id(msg);
+            if (dest_id == BOARD_UNIQUE_ID || dest_id == 0) {
+                RESET();
+            }
+            break;
+
+        // all the other ones - do nothing
+        default:
+            break;
+    }
+}
+
+
 
 int main(int argc, char **argv) {
     // MCC generated initializer
     SYSTEM_Initialize();
-
+    
     LED_init();
 
     // init our millisecond function
     timer0_init();
+    uint32_t last_millis = millis();
 
     // Enable global interrupts
     INTCON0bits.GIE = 1;
     
     while (1) {
         // preface with #if (BOARD_UNIQUE_ID == ??
-        uint32_t last_millis = millis();
         
         // heartbeat Red LED to toggle every 500ms if status_ok
         if (millis() - last_millis > STATUS_TIME_DIFF_ms) {
@@ -56,6 +189,11 @@ int main(int argc, char **argv) {
             
             // Red LED flashes during safe state.
             LED_heartbeat_R();
+            last_millis = millis();
         } 
     }
 }
+
+
+
+

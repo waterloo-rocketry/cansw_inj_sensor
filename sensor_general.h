@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#define LED_ON_R() (LATB4 = 0)
-#define LED_OFF_R() (LATB4 = 1)
+#define LED_ON_R() (LATB3 = 0)
+#define LED_OFF_R() (LATB3 = 1)
 
 
 // Initialize LED

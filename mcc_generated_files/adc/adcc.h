@@ -69,7 +69,8 @@ typedef enum
     channel_ANB3 =  0xb,
     channel_ANB4 =  0xc,
     channel_ANB5 =  0xd,
-    channel_ANC2 =  0x12
+    channel_ANC2 =  0x12,
+    channel_ANC3 = 0x13
 } adcc_channel_t;
 
 /**
