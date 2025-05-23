@@ -214,22 +214,104 @@ int main(int argc, char **argv) {
 
             // check for general board status
             bool status_ok = true;
-            // below are likely unnecessary as stated by liz
-//            status_ok &= check_battery_voltage_error(batt_vol_sense);
-//
-//            status_ok &= check_5v_current_error(current_sense_5v);
-//            status_ok &= check_12v_current_error(current_sense_12v);
+            // [TODO] add these, only current check for board, not voltage
+            status_ok &= check_5v_current_error(current_sense_5v);
+            status_ok &= check_12v_current_error(current_sense_12v);
 
             // if there was an issue, a message would already have been sent out
-//            if (status_ok) {
-//                send_status_ok();
-//            }
+            if (status_ok) {
+                send_status_ok();
+            }
             
             // Red LED flashes during safe state.
             LED_heartbeat_R();
             last_millis = millis();
-        } 
+        }
+
+#if PRES_FUEL_TIME_DIFF_ms
+        if (millis() - last_pres_fuel_millis > PRES_FUEL_TIME_DIFF_ms) {
+            last_pres_fuel_millis = millis();
+            uint16_t fuel_pressure = update_pressure_psi_low_pass(pres_fuel, &fuel_pres_low_pass);
+            if ((fuel_pres_count & 0xf) == 0) {
+                can_msg_t sensor_msg;
+                build_analog_data_msg(
+                    millis(), SENSOR_PRESSURE_FUEL, fuel_pressure, &sensor_msg);
+                txb_enqueue(&sensor_msg);
+            }
+            fuel_pres_count++;
+        }
+#endif
+        
+#if PRES_CC_1_TIME_DIFF_ms
+        if (millis() - last_pres_cc_millis > PRES_CC_TIME_DIFF_ms) {
+            last_pres_cc_millis = millis();
+            uint16_t cc_pressure = update_pressure_psi_low_pass(pres_cc, &cc_pres_low_pass);
+            if ((cc_pres_count & 0xf) == 0) {
+                can_msg_t sensor_msg;
+                build_analog_data_msg(millis(), SENSOR_PRESSURE_CC, cc_pressure, &sensor_msg);
+                txb_enqueue(&sensor_msg);
+            }
+            cc_pres_count++;
+        }
+#endif
+        
+        // [TODO] do we have PRES_CC_2_TIME_DIFF_ms directive
+        
+#if HALLSENSE_FUEL_TIME_DIFF_ms
+        if (millis() - last_hallsense_fuel_millis > HALLSENSE_FUEL_TIME_DIFF_ms) {
+            last_hallsense_fuel_millis = millis();
+            uint16_t hallsense_fuel_flux = get_hall_sensor_reading(hallsense_fuel);
+            can_msg_t sensor_msg;
+            build_analog_data_msg(millis(), SENSOR_HALL_FUEL_INJ, hallsense_fuel_flux, &sensor_msg);
+            txb_enqueue(&sensor_msg);
+
+            can_msg_t stat_msg3;
+            build_actuator_stat_msg(
+                millis(),
+                ACTUATOR_FUEL_INJECTOR,
+                ((hallsense_fuel_flux < HALLSENSE_FUEL_THRESHOLD) ? ACTUATOR_ON : ACTUATOR_OFF),
+                requested_actuator_state_inj,
+                &stat_msg3);
+            txb_enqueue(&stat_msg3);
+        }
+#endif
+        
+#if HALLSENSE_OX_TIME_DIFF_ms
+        if (millis() - last_hallsense_ox_millis > HALLSENSE_OX_TIME_DIFF_ms) {
+            last_hallsense_ox_millis = millis();
+            uint16_t hallsense_ox_flux = get_hall_sensor_reading(hallsense_ox);
+            can_msg_t sensor_msg;
+            build_analog_data_msg(millis(), SENSOR_HALL_OX_INJ, hallsense_ox_flux, &sensor_msg);
+            txb_enqueue(&sensor_msg);
+
+            can_msg_t stat_msg1;
+            build_actuator_stat_msg(
+                millis(),
+                ACTUATOR_OX_INJECTOR,
+                ((hallsense_ox_flux > HALLSENSE_OX_THRESHOLD) ? ACTUATOR_ON : ACTUATOR_OFF),
+                requested_actuator_state_inj,
+                &stat_msg1);
+            txb_enqueue(&stat_msg1);
+        }
+#endif
+        
+#if PRES_OX_TIME_DIFF_ms
+        if (millis() - last_pres_ox_millis > PRES_OX_TIME_DIFF_ms) {
+            last_pres_ox_millis = millis();
+            uint16_t ox_pressure = update_pressure_psi_low_pass(pres_ox, &ox_pres_low_pass);
+            if ((ox_pres_count & 0xf) == 0) {
+                can_msg_t sensor_msg;
+                build_analog_data_msg(millis(), SENSOR_PRESSURE_OX, ox_pressure, &sensor_msg);
+                txb_enqueue(&sensor_msg);
+            }
+            ox_pres_count++;
+        }
+#endif
+        // send any queued CAN messages
+        txb_heartbeat();
     }
+    
+    return (EXIT_SUCCESS);
 }
 
 
