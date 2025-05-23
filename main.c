@@ -17,24 +17,21 @@
 
 #include <xc.h>
 
-// Do we need this? 
 #define MAX_BUS_DEAD_TIME_ms 1000
 
 
 // Set any of these to zero to disable
 #define STATUS_TIME_DIFF_ms 500 
 
-
-/* Sets ADC channels for current sense (these currently cannot be tested without board)
+// Sets ADC channels for current sense (these currently cannot be tested without board)
+/* 
 adcc_channel_t current_sense_5v = channel_ANC3; // NOTE: adcc.h was modified to add register for pin C3 adc 
-adcc_channel_t current_sense_12v = channel_ANC2; //
-// adcc_channel_t batt_vol_sense = channel_AN; No batt voltage sense currently
+adcc_channel_t current_sense_12v = channel_ANC2; 
 */
 
-
-#define PRES_PNEUMATICS_TIME_DIFF_ms 250 // 4 Hz
-#define PRES_FUEL_TIME_DIFF_ms 16 // 64 Hz
-#define PRES_CC_1_TIME_DIFF_ms 16 // 64 Hz
+#define PRES_OX_TIME_DIFF_ms 50 // 4 Hz
+#define PRES_FUEL_TIME_DIFF_ms 50 // 64 Hz
+#define PRES_CC_1_TIME_DIFF_ms 50 // 64 Hz
 // #define PRES_CC_2_TIME_DIFF_ms 16 // 64 Hz // may be unneccesary 
 #define HALLSENSE_FUEL_TIME_DIFF_ms 250 // 4 Hz
 #define HALLSENSE_OX_TIME_DIFF_ms 250 // 4 Hz
@@ -46,6 +43,16 @@ adcc_channel_t pres_ox = channel_ANB2;
 adcc_channel_t pres_fuel = channel_ANB3;
 adcc_channel_t hallsense_ox = channel_ANB4;
 adcc_channel_t hallsense_fuel = channel_ANB5;
+
+double fuel_pres_low_pass = 0;
+double ox_pres_low_pass = 0;
+double cc1_pres_low_pass = 0;
+// double cc2_pres_low_pass = 0;
+uint8_t fuel_pres_count = 0;
+uint8_t ox_pres_count = 0;
+uint8_t cc1_pres_count = 0;
+// uint8_t cc2_pres_count = 0;
+
 
 volatile bool seen_can_message = false;
 volatile bool seen_can_command = false;
@@ -157,6 +164,14 @@ int main(int argc, char **argv) {
     // init our millisecond function
     timer0_init();
     uint32_t last_millis = millis();
+    uint32_t last_message_millis = 0;
+    
+    uint32_t last_pres_cc_1_millis = millis();
+    // uint32_t last_pres_cc_2_millis = millis();
+    uint32_t last_pres_ox_millis = millis();
+    uint32_t last_pres_fuel_millis = millis();
+    uint32_t last_hallsense_ox_millis = millis();
+    uint32_t last_hallsense_fuel_millis = millis();
 
     // Enable global interrupts
     INTCON0bits.GIE = 1;
@@ -169,6 +184,14 @@ int main(int argc, char **argv) {
     TRISC0 = 1;
     ANSELC0 = 0;
     CANRXPPS = 0x10;
+    
+    // set up CAN module
+    can_timing_t can_setup;
+    can_generate_timing_params(_XTAL_FREQ, &can_setup);
+    can_init(&can_setup, can_msg_handler);
+    
+    // set up CAN tx buffer
+    txb_init(tx_pool, sizeof(tx_pool), can_send, can_send_rdy);
     
     while (1) {
         
