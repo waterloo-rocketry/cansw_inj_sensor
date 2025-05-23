@@ -195,6 +195,20 @@ int main(int argc, char **argv) {
     
     while (1) {
         
+        CLRWDT(); // feed the watchdog, which is set for 256ms
+
+        if (seen_can_message) {
+            seen_can_message = false;
+            last_message_millis = millis();
+        }
+        if (seen_can_command) {
+            seen_can_command = false;
+        }
+        
+        if ((millis() - last_message_millis) > MAX_BUS_DEAD_TIME_ms) {
+            RESET();
+        }
+        
         // heartbeat Red LED to toggle every 500ms if status_ok
         if (millis() - last_millis > STATUS_TIME_DIFF_ms) {
 
