@@ -35,13 +35,13 @@ adcc_channel_t current_sense_12v = channel_ANC2; //
 #define PRES_PNEUMATICS_TIME_DIFF_ms 250 // 4 Hz
 #define PRES_FUEL_TIME_DIFF_ms 16 // 64 Hz
 #define PRES_CC_1_TIME_DIFF_ms 16 // 64 Hz
-#define PRES_CC_2_TIME_DIFF_ms 16 // 64 Hz
+// #define PRES_CC_2_TIME_DIFF_ms 16 // 64 Hz // may be unneccesary 
 #define HALLSENSE_FUEL_TIME_DIFF_ms 250 // 4 Hz
 #define HALLSENSE_OX_TIME_DIFF_ms 250 // 4 Hz
 
 
 adcc_channel_t pres_cc1 = channel_ANB0;
-adcc_channel_t pres_cc2 = channel_ANB1;
+// adcc_channel_t pres_cc2 = channel_ANB1;
 adcc_channel_t pres_ox = channel_ANB2;
 adcc_channel_t pres_fuel = channel_ANB3;
 adcc_channel_t hallsense_ox = channel_ANB4;
@@ -61,6 +61,7 @@ uint8_t tx_pool[200];
 - check if crystal oscillator has correct specfiications (see table 45-9 in datashset) 
  
  - made changes to rocketlib in adcc.h
+ - add conditional compilation to add CCPT2 functionality 
  */
 
 // 7.2.1.4 --> 4xPLL 
@@ -147,6 +148,8 @@ static void can_msg_handler(const can_msg_t *msg) {
 
 int main(int argc, char **argv) {
     // MCC generated initializer
+    // OSCCON1 register was changed to enable 4xPLL 
+    // Sets fixed reference voltage for ADC to 4.096V, see section 35.0 
     SYSTEM_Initialize();
     
     LED_init();
