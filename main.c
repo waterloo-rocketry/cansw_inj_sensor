@@ -240,17 +240,17 @@ int main(int argc, char **argv) {
             fuel_pres_count++;
         }
 #endif
-        
+
 #if PRES_CC_1_TIME_DIFF_ms
-        if (millis() - last_pres_cc_millis > PRES_CC_TIME_DIFF_ms) {
-            last_pres_cc_millis = millis();
-            uint16_t cc_pressure = update_pressure_psi_low_pass(pres_cc, &cc_pres_low_pass);
-            if ((cc_pres_count & 0xf) == 0) {
+        if (millis() - last_pres_cc_1_millis > PRES_CC_1_TIME_DIFF_ms) {
+            last_pres_cc_1_millis = millis();
+            uint16_t cc_pressure = update_pressure_psi_low_pass(pres_cc1, &cc1_pres_low_pass);
+            if ((cc1_pres_count & 0xf) == 0) {
                 can_msg_t sensor_msg;
                 build_analog_data_msg(millis(), SENSOR_PRESSURE_CC, cc_pressure, &sensor_msg);
                 txb_enqueue(&sensor_msg);
             }
-            cc_pres_count++;
+            cc1_pres_count++;
         }
 #endif
         
@@ -261,7 +261,7 @@ int main(int argc, char **argv) {
             last_hallsense_fuel_millis = millis();
             uint16_t hallsense_fuel_flux = get_hall_sensor_reading(hallsense_fuel);
             can_msg_t sensor_msg;
-            build_analog_data_msg(millis(), SENSOR_HALL_FUEL_INJ, hallsense_fuel_flux, &sensor_msg);
+            build_analog_data_msg(PRIO_MEDIUM, millis(), SENSOR_HALL_FUEL_INJ, hallsense_fuel_flux, &sensor_msg);
             txb_enqueue(&sensor_msg);
 
             can_msg_t stat_msg3;
