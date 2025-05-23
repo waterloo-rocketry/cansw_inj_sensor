@@ -158,6 +158,15 @@ int main(int argc, char **argv) {
     // Enable global interrupts
     INTCON0bits.GIE = 1;
     
+    // Set up CAN TX
+    TRISC1 = 0;
+    RC1PPS = 0x33;
+    
+    // Set up CAN RX
+    TRISC0 = 1;
+    ANSELC0 = 0;
+    CANRXPPS = 0x10;
+    
     while (1) {
         
         // heartbeat Red LED to toggle every 500ms if status_ok
