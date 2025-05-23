@@ -233,6 +233,7 @@ int main(int argc, char **argv) {
             uint16_t fuel_pressure = update_pressure_psi_low_pass(pres_fuel, &fuel_pres_low_pass);
             if ((fuel_pres_count & 0xf) == 0) {
                 can_msg_t sensor_msg;
+                // TODO adapt new canlib build_analog_data_msg with new parameters
                 build_analog_data_msg(
                     millis(), SENSOR_PRESSURE_FUEL, fuel_pressure, &sensor_msg);
                 txb_enqueue(&sensor_msg);
@@ -247,6 +248,7 @@ int main(int argc, char **argv) {
             uint16_t cc_pressure = update_pressure_psi_low_pass(pres_cc1, &cc1_pres_low_pass);
             if ((cc1_pres_count & 0xf) == 0) {
                 can_msg_t sensor_msg;
+                // TODO adapt new canlib build_analog_data_msg with new parameters
                 build_analog_data_msg(millis(), SENSOR_PRESSURE_CC, cc_pressure, &sensor_msg);
                 txb_enqueue(&sensor_msg);
             }
@@ -261,17 +263,9 @@ int main(int argc, char **argv) {
             last_hallsense_fuel_millis = millis();
             uint16_t hallsense_fuel_flux = get_hall_sensor_reading(hallsense_fuel);
             can_msg_t sensor_msg;
+            // TODO adapt new canlib build_analog_data_msg with new parameters
             build_analog_data_msg(PRIO_MEDIUM, millis(), SENSOR_HALL_FUEL_INJ, hallsense_fuel_flux, &sensor_msg);
             txb_enqueue(&sensor_msg);
-
-            can_msg_t stat_msg3;
-            build_actuator_stat_msg(
-                millis(),
-                ACTUATOR_FUEL_INJECTOR,
-                ((hallsense_fuel_flux < HALLSENSE_FUEL_THRESHOLD) ? ACTUATOR_ON : ACTUATOR_OFF),
-                requested_actuator_state_inj,
-                &stat_msg3);
-            txb_enqueue(&stat_msg3);
         }
 #endif
         
@@ -280,17 +274,9 @@ int main(int argc, char **argv) {
             last_hallsense_ox_millis = millis();
             uint16_t hallsense_ox_flux = get_hall_sensor_reading(hallsense_ox);
             can_msg_t sensor_msg;
+            // TODO adapt new canlib build_analog_data_msg with new parameters
             build_analog_data_msg(millis(), SENSOR_HALL_OX_INJ, hallsense_ox_flux, &sensor_msg);
             txb_enqueue(&sensor_msg);
-
-            can_msg_t stat_msg1;
-            build_actuator_stat_msg(
-                millis(),
-                ACTUATOR_OX_INJECTOR,
-                ((hallsense_ox_flux > HALLSENSE_OX_THRESHOLD) ? ACTUATOR_ON : ACTUATOR_OFF),
-                requested_actuator_state_inj,
-                &stat_msg1);
-            txb_enqueue(&stat_msg1);
         }
 #endif
         
@@ -300,6 +286,7 @@ int main(int argc, char **argv) {
             uint16_t ox_pressure = update_pressure_psi_low_pass(pres_ox, &ox_pres_low_pass);
             if ((ox_pres_count & 0xf) == 0) {
                 can_msg_t sensor_msg;
+                // TODO adapt new canlib build_analog_data_msg with new parameters
                 build_analog_data_msg(millis(), SENSOR_PRESSURE_OX, ox_pressure, &sensor_msg);
                 txb_enqueue(&sensor_msg);
             }
