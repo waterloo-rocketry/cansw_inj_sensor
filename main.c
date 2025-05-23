@@ -54,7 +54,7 @@ adcc_channel_t hallsense_fuel = channel_ANB5;
  - const float vref = 4.096; 
 - check if crystal oscillator has correct specfiications (see table 45-9 in datashset) 
  
- 
+ - made changes to rocketlib in adcc.h
  */
 
 // 7.2.1.4 --> 4xPLL 
