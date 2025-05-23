@@ -4,9 +4,15 @@
 
 #include "sensor_general.h"
 
+// [TODO] pin assignment corresponds to KETO board for testing. 
+// TO CHANGE PIN ASSIGNMENT LATER
 void LED_init(void) {
-    TRISB3 = 0; // set A4 as output
+    TRISB3 = 0; // set B3 as output
     LATB3 = 1; // LED off by default
+    TRISB2 = 0; // set B2 as output
+    LATB2 = 1; // LED off by default
+    TRISB1 = 0; // set B2 as output
+    LATB1 = 1; // LED off by default
 }
 
 
