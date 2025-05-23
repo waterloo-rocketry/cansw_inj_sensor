@@ -24,10 +24,9 @@
 #define STATUS_TIME_DIFF_ms 500 
 
 // Sets ADC channels for current sense (these currently cannot be tested without board)
-/* 
 adcc_channel_t current_sense_5v = channel_ANC3; // NOTE: adcc.h was modified to add register for pin C3 adc 
 adcc_channel_t current_sense_12v = channel_ANC2; 
-*/
+
 
 #define PRES_OX_TIME_DIFF_ms 50 // 4 Hz
 #define PRES_FUEL_TIME_DIFF_ms 50 // 64 Hz
