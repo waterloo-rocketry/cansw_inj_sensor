@@ -206,13 +206,13 @@ int main(int argc, char **argv) {
 #endif
         
 #if PRES_CC2_TIME_DIFF_ms
-        if (millis() - last_pres_cc1_millis > PRES_CC2_TIME_DIFF_ms) {
+        if (millis() - last_pres_cc2_millis > PRES_CC2_TIME_DIFF_ms) {
             last_pres_cc2_millis = millis();
-            uint16_t cc2_pressure = update_pressure_psi_low_pass(pres_cc2, &cc1_pres_low_pass);
+            uint16_t cc2_pressure = update_pressure_psi_low_pass(pres_cc2, &cc2_pres_low_pass);
             if ((cc2_pres_count & 0xf) == 0) {
                 can_msg_t sensor_msg;
                 
-                build_analog_data_msg(PRIO_LOW, millis(), SENSOR_PRESSURE_CC2, cc1_pressure, &sensor_msg);
+                build_analog_data_msg(PRIO_LOW, millis(), SENSOR_PRESSURE_CC2, cc2_pressure, &sensor_msg);
                 txb_enqueue(&sensor_msg);
             }
             cc2_pres_count++;
@@ -247,10 +247,6 @@ int main(int argc, char **argv) {
     
     return (EXIT_SUCCESS);
 }
-
-
-
-
 
 
 
