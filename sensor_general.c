@@ -6,9 +6,10 @@
 
 #include "sensor_general.h"
 
+#define PRES_TIME_DIFF_ms 50 // 20 Hz
 #define PT_OFFSET 0
 
-const float VREF = 3.3;
+const float VREF = 4.096; // FVR vref 
 
 // [TODO] pin assignment corresponds to KETO board for testing. 
 // TO CHANGE PIN ASSIGNMENT LATER
@@ -40,7 +41,7 @@ uint32_t get_pressure_4_20_psi(adcc_channel_t adc_channel) {
 
     float v = (voltage_raw + 0.5f) / 4096.0f * VREF;
 
-    const double r = 100;
+    const uint16_t r = 100;
     const double pressure_range = 1450;
 
     double current = v / r;

@@ -37,6 +37,7 @@
 void CLOCK_Initialize(void)
 {
     // Set the CLOCK CONTROL module to the options selected in the user interface.
+    // 7.2.1.4 --> 4xPLL 
     //NDIV 1; NOSC EXTOSC; 
     OSCCON1 = 0x20;
     //SOSCPWR Low power; CSWHOLD may proceed; 
