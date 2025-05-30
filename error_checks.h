@@ -9,8 +9,6 @@
 
 #include <stdbool.h>
 
-
-
 // General board status checkers
 bool check_5v_current_error(adcc_channel_t current_channel);
 bool check_12v_current_error(adcc_channel_t current_channel);

@@ -9,9 +9,9 @@
 #define PRES_TIME_DIFF_ms 50 // 20 Hz
 #define PT_OFFSET 0
 
-const float VREF = 4.096; // FVR vref 
+const float VREF = 4.096; // FVR vref
 
-// [TODO] pin assignment corresponds to KETO board for testing. 
+// [TODO] pin assignment corresponds to KETO board for testing.
 // TO CHANGE PIN ASSIGNMENT LATER
 void LED_init(void) {
     TRISB3 = 0; // set B3 as output
@@ -21,7 +21,6 @@ void LED_init(void) {
     TRISB1 = 0; // set B2 as output
     LATB1 = 1; // LED off by default
 }
-
 
 // Red LED
 void LED_heartbeat_R(void) {
@@ -58,10 +57,10 @@ uint32_t get_pressure_4_20_psi(adcc_channel_t adc_channel) {
 volatile double alpha_low = LOW_PASS_ALPHA(LOW_PASS_RESPONSE_TIME);
 
 uint16_t update_pressure_psi_low_pass(adcc_channel_t adc_channel, double *low_pass_pressure_psi) {
-
     int16_t pressure_psi = get_pressure_4_20_psi(adc_channel);
 
-    *low_pass_pressure_psi = alpha_low * (*low_pass_pressure_psi) + (1.0 - alpha_low) * pressure_psi;
+    *low_pass_pressure_psi =
+        alpha_low * (*low_pass_pressure_psi) + (1.0 - alpha_low) * pressure_psi;
 
     return (uint16_t)(*low_pass_pressure_psi);
 }

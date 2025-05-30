@@ -13,24 +13,25 @@
 #define BAT_OVERCURRENT_THRESHOLD_mA 150
 
 const float VREF = 4.096;
-const float mA_SENSE_CONVERT_FACTOR = 10000 * VREF / 4096.0f; //  10e6 uV conversion / 100 V/V multiplier * FVR vref / 12bit adc
+const float mA_SENSE_CONVERT_FACTOR =
+    10000 * VREF / 4096.0f; //  10e6 uV conversion / 100 V/V multiplier * FVR vref / 12bit adc
 //******************************************************************************
 //                              STATUS CHECKS                                 //
 //******************************************************************************
 
 // Check bus current error
-bool check_5v_current_error(adcc_channel_t current_channel) { 
-
+bool check_5v_current_error(adcc_channel_t current_channel) {
     adc_result_t voltage_raw = ADCC_GetSingleConversion(current_channel);
     float uV = voltage_raw * mA_SENSE_CONVERT_FACTOR;
     uint16_t curr_draw_mA = uV / 62; // 62 is R8 rating in mR
 
     if (curr_draw_mA > BUS_OVERCURRENT_THRESHOLD_mA) {
-        
         uint32_t timestamp = millis();
         can_msg_t error_msg;
-       
-        build_general_board_status_msg(PRIO_MEDIUM, timestamp, E_5V_OVER_CURRENT_OFFSET, curr_draw_mA, &error_msg);
+
+        build_general_board_status_msg(
+            PRIO_MEDIUM, timestamp, E_5V_OVER_CURRENT_OFFSET, curr_draw_mA, &error_msg
+        );
         txb_enqueue(&error_msg);
         return false;
     }
@@ -40,16 +41,17 @@ bool check_5v_current_error(adcc_channel_t current_channel) {
 }
 
 // check battery current error
-bool check_12v_current_error(adcc_channel_t current_channel) { 
+bool check_12v_current_error(adcc_channel_t current_channel) {
     adc_result_t voltage_raw = ADCC_GetSingleConversion(current_channel);
     float uV = voltage_raw * mA_SENSE_CONVERT_FACTOR;
     uint16_t curr_draw_mA = uV / 15; // 15 is R7 rating in mR
 
     if (curr_draw_mA > BAT_OVERCURRENT_THRESHOLD_mA) {
-        
         uint32_t timestamp = millis();
         can_msg_t error_msg;
-        build_general_board_status_msg(PRIO_MEDIUM, timestamp, E_12V_OVER_CURRENT_OFFSET, curr_draw_mA, &error_msg);
+        build_general_board_status_msg(
+            PRIO_MEDIUM, timestamp, E_12V_OVER_CURRENT_OFFSET, curr_draw_mA, &error_msg
+        );
         txb_enqueue(&error_msg);
         return false;
     }
@@ -60,25 +62,23 @@ bool check_12v_current_error(adcc_channel_t current_channel) {
 
 // checks if PT current is between 4 and 20 mA
 bool check_PT_current_error(adcc_channel_t pt_channel) {
-    
     adc_result_t voltage_raw = ADCC_GetSingleConversion(pt_channel);
     float v = (voltage_raw + 0.5f) / 4096.0f * VREF;
     const uint16_t r = 100;
-    
+
     double current_mA = 1000 * v / r;
-    
-    if (current_mA < 4 || current_mA > 20 ) { 
+
+    if (current_mA < 4 || current_mA > 20) {
         uint32_t timestamp = millis();
         can_msg_t error_msg;
         build_general_board_status_msg(PRIO_MEDIUM, timestamp, 0, 1, &error_msg);
         txb_enqueue(&error_msg);
-        
-        // PT decides to shit itself 
+
+        // PT decides to shit itself
         return false;
     }
-    
-    // current is nominal 
+
+    // current is nominal
     return true;
 }
-
 
