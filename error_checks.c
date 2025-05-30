@@ -70,7 +70,7 @@ bool check_PT_current_error(adcc_channel_t pt_channel) {
     if (current_mA < 4 || current_mA > 20 ) { 
         uint32_t timestamp = millis();
         can_msg_t error_msg;
-        build_general_board_status_msg(PRIO_MEDIUM, timestamp, E_PT_OUT_OF_RANGE, current_mA, &error_msg);
+        build_general_board_status_msg(PRIO_MEDIUM, timestamp, 0, 1, &error_msg);
         txb_enqueue(&error_msg);
         
         // PT decides to shit itself 

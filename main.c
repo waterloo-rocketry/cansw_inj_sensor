@@ -80,6 +80,17 @@ uint8_t tx_pool[200];
 - review message prio for analog can messages and those sent in error_checks
 
 - Add SENSOR_HALL_OX, and SENSOR_HALL_INJ, E_PT_OUT_OF_RANGE
+ * 
+ * 
+ * 
+ * 
+ * REGENERATE THE MCC 
+ * - we temporarily multiplied the XTAL_FREQ macro by x4, set it back to proper value
+ * - - revert the 4xPLL setting?
+ * change back the CANRX/TX pins for the inj board 
+ * test FVR 
+ * - 
+ * - 
  */
 
 
@@ -225,7 +236,7 @@ int main(int argc, char **argv) {
             uint16_t hallsense_fuel_flux = get_hall_sensor_reading(hallsense_fuel);
             can_msg_t sensor_msg;
 
-            build_analog_data_msg(PRIO_LOW, millis(), SENSOR_HALL_FUEL_INJ, hallsense_fuel_flux, &sensor_msg);
+            build_analog_data_msg(PRIO_LOW, millis(), SENSOR_FUEL_INJ_HALL, hallsense_fuel_flux, &sensor_msg);
             txb_enqueue(&sensor_msg);
         }
 #endif
@@ -236,7 +247,7 @@ int main(int argc, char **argv) {
             uint16_t hallsense_ox_flux = get_hall_sensor_reading(hallsense_ox);
             can_msg_t sensor_msg;
 
-            build_analog_data_msg(PRIO_LOW, millis(), SENSOR_HALL_OX_INJ, hallsense_ox_flux, &sensor_msg);
+            build_analog_data_msg(PRIO_LOW, millis(), SENSOR_OX_INJ_HALL, hallsense_ox_flux, &sensor_msg);
             txb_enqueue(&sensor_msg);
         }
 #endif
