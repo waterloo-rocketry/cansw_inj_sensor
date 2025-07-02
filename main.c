@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
     // Sets fixed reference voltage for ADC to 4.096V, see section 35.0
     SYSTEM_Initialize();
 
-    LED_init();
+    LED_init(); //Turn all LEDs on
 
     // init our millisecond function
     timer0_init();
@@ -124,6 +124,8 @@ int main(int argc, char **argv) {
     TRISC1 = 1; // TRISC0
     ANSELC1 = 0; // ANSELC0
     CANRXPPS = 0x11; // 0x10
+    
+    
 
     // set up CAN module
     can_timing_t can_setup;
@@ -165,7 +167,8 @@ int main(int argc, char **argv) {
             }
 
             // Red LED flashes during safe state.
-            LED_heartbeat_R();
+            //sLED_heartbeat_R();
+            LED_R = LED_R ^ LED_OFF;
             last_millis = millis();
         }
 
@@ -209,7 +212,7 @@ int main(int argc, char **argv) {
                 can_msg_t sensor_msg;
 
                 build_analog_data_msg(
-                    PRIO_LOW, millis(), SENSOR_PRESSURE_CC1, cc1_pressure, &sensor_msg
+                    PRIO_LOW, millis(), SENSOR_PRESSURE_CC0, cc1_pressure, &sensor_msg
                 );
                 txb_enqueue(&sensor_msg);
             }
@@ -225,7 +228,7 @@ int main(int argc, char **argv) {
                 can_msg_t sensor_msg;
 
                 build_analog_data_msg(
-                    PRIO_LOW, millis(), SENSOR_PRESSURE_CC2, cc2_pressure, &sensor_msg
+                    PRIO_LOW, millis(), SENSOR_PRESSURE_CC1, cc2_pressure, &sensor_msg
                 );
                 txb_enqueue(&sensor_msg);
             }
@@ -242,6 +245,7 @@ int main(int argc, char **argv) {
             build_analog_data_msg(
                 PRIO_LOW, millis(), SENSOR_FUEL_INJ_HALL, hallsense_fuel_flux, &sensor_msg
             );
+            // TEMPORARY SENDING AS CC PRESSURE
             txb_enqueue(&sensor_msg);
         }
 #endif
@@ -310,15 +314,15 @@ static void can_msg_handler(const can_msg_t *msg) {
 
     switch (msg_type) {
         case MSG_LEDS_ON:
-            LED_ON_G();
-            LED_ON_Y();
-            LED_ON_R();
+            LED_R = !LED_OFF;
+            LED_Y = !LED_OFF;
+            LED_G = !LED_OFF;
             break;
 
         case MSG_LEDS_OFF:
-            LED_OFF_G();
-            LED_OFF_Y();
-            LED_OFF_R();
+            LED_R = LED_OFF;
+            LED_Y = LED_OFF;
+            LED_G = LED_OFF;
             break;
 
         case MSG_RESET_CMD:

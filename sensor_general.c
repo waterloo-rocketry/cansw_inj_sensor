@@ -11,28 +11,15 @@
 
 const float VREF = 4.096; // FVR vref
 
-// [TODO] pin assignment corresponds to KETO board for testing.
-// TO CHANGE PIN ASSIGNMENT LATER
 void LED_init(void) {
-    TRISB3 = 0; // set B3 as output
-    LATB3 = 1; // LED off by default
-    TRISB2 = 0; // set B2 as output
-    LATB2 = 1; // LED off by default
-    TRISB1 = 0; // set B2 as output
-    LATB1 = 1; // LED off by default
+    TRISA4 = 0;
+    LED_R = !LED_OFF;
+    TRISA3 = 0;
+    LED_Y = LED_OFF;
+    TRISA2 = 0;
+    LED_G = LED_OFF;
 }
 
-// Red LED
-void LED_heartbeat_R(void) {
-    static bool led_on = false;
-    if (led_on) {
-        LED_OFF_R();
-        led_on = false;
-    } else {
-        LED_ON_R();
-        led_on = true;
-    }
-}
 
 // 4-20mA pressure transducer
 uint32_t get_pressure_4_20_psi(adcc_channel_t adc_channel) {

@@ -4,14 +4,10 @@
 #include "mcc_generated_files/adc/adcc.h"
 #include <stdint.h>
 
-// [TODO] pin assignment corresponds to KETO board for testing.
-// TO CHANGE PIN ASSIGNMENT LATER
-#define LED_ON_R() (LATB3 = 0) // RA4
-#define LED_OFF_R() (LATB3 = 1)
-#define LED_ON_Y() (LATB1 = 0) // RA3
-#define LED_OFF_Y() (LATB1 = 1)
-#define LED_ON_G() (LATB2 = 0) // RA2
-#define LED_OFF_G() (LATB2 = 1)
+#define LED_R LATA4 // RA4
+#define LED_Y LATA3
+#define LED_G LATA2
+#define LED_OFF 1
 
 // Initialize LEDS
 void LED_init(void);
