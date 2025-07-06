@@ -20,36 +20,28 @@
 
 #define PRES_OX_TIME_DIFF_ms 50 // 20 Hz
 #define PRES_FUEL_TIME_DIFF_ms 50 // 20 Hz
-#define PRES_CC1_TIME_DIFF_ms 50 // 20 Hz
-// #define PRES_CC2_TIME_DIFF_ms // define this if we are using the extra PT port
+#define PRES_CC_TIME_DIFF_ms 50 // 20 Hz
 #define HALLSENSE_FUEL_TIME_DIFF_ms 250 // 4 Hz
 #define HALLSENSE_OX_TIME_DIFF_ms 250 // 4 Hz
 
 // Sets ADC channels for current sense (these currently cannot be tested without board)
 adcc_channel_t current_sense_5v =
-    channel_ANC3; // NOTE: adcc.h was modified to add register for pin C3 adc
+    channel_ANC4; // NOTE: adcc.h was modified to add register for pin C3 adc
 adcc_channel_t current_sense_12v = channel_ANC2;
 
-adcc_channel_t pres_cc1 = channel_ANB0;
-
+adcc_channel_t pres_cc = channel_ANB3;
 adcc_channel_t pres_ox = channel_ANB2;
-adcc_channel_t pres_fuel = channel_ANB3;
-adcc_channel_t hallsense_ox = channel_ANB4;
-adcc_channel_t hallsense_fuel = channel_ANB5;
+adcc_channel_t pres_fuel = channel_ANB1;
+adcc_channel_t hallsense_ox = channel_ANC7;
+adcc_channel_t hallsense_fuel = channel_ANC6;
 
 double fuel_pres_low_pass = 0;
 double ox_pres_low_pass = 0;
-double cc1_pres_low_pass = 0;
+double cc_pres_low_pass = 0;
 
 uint8_t fuel_pres_count = 0;
 uint8_t ox_pres_count = 0;
-uint8_t cc1_pres_count = 0;
-
-#if PRES_CC2_TIME_DIFF_ms
-uint8_t cc2_pres_count = 0;
-double cc2_pres_low_pass = 0;
-adcc_channel_t pres_cc2 = channel_ANB1;
-#endif
+uint8_t cc_pres_count = 0;
 
 volatile bool seen_can_message = false;
 volatile bool seen_can_command = false;
@@ -106,8 +98,7 @@ int main(int argc, char **argv) {
     uint32_t last_millis = millis();
     uint32_t last_message_millis = 0;
 
-    uint32_t last_pres_cc1_millis = millis();
-    // uint32_t last_pres_cc2_millis = millis();
+    uint32_t last_pres_cc_millis = millis();
     uint32_t last_pres_ox_millis = millis();
     uint32_t last_pres_fuel_millis = millis();
     uint32_t last_hallsense_ox_millis = millis();
@@ -117,13 +108,13 @@ int main(int argc, char **argv) {
     INTCON0bits.GIE = 1;
 
     // Set up CAN TX
-    TRISC0 = 0; // TRISC1
-    RC0PPS = 0x33; // RC1PPS
+    TRISC1 = 0;
+    RC1PPS = 0x33;
 
     // Set up CAN RX
-    TRISC1 = 1; // TRISC0
-    ANSELC1 = 0; // ANSELC0
-    CANRXPPS = 0x11; // 0x10
+    TRISC0 = 1;
+    ANSELC0 = 0;
+    CANRXPPS = 0x10;
     
     
 
@@ -157,7 +148,7 @@ int main(int argc, char **argv) {
 
             status_ok &= check_5v_current_error(current_sense_5v);
             status_ok &= check_12v_current_error(current_sense_12v);
-            status_ok &= check_PT_current_error(pres_cc1);
+            status_ok &= check_PT_current_error(pres_cc);
             status_ok &= check_PT_current_error(pres_fuel);
             status_ok &= check_PT_current_error(pres_ox);
 
@@ -167,7 +158,6 @@ int main(int argc, char **argv) {
             }
 
             // Red LED flashes during safe state.
-            //sLED_heartbeat_R();
             LED_R = LED_R ^ LED_OFF;
             last_millis = millis();
         }
@@ -204,19 +194,19 @@ int main(int argc, char **argv) {
         }
 #endif
 
-#if PRES_CC1_TIME_DIFF_ms
-        if (millis() - last_pres_cc1_millis > PRES_CC1_TIME_DIFF_ms) {
-            last_pres_cc1_millis = millis();
-            uint16_t cc1_pressure = update_pressure_psi_low_pass(pres_cc1, &cc1_pres_low_pass);
-            if ((cc1_pres_count & 0xf) == 0) {
+#if PRES_CC_TIME_DIFF_ms
+        if (millis() - last_pres_cc_millis > PRES_CC_TIME_DIFF_ms) {
+            last_pres_cc_millis = millis();
+            uint16_t cc_pressure = update_pressure_psi_low_pass(pres_cc, &cc_pres_low_pass);
+            if ((cc_pres_count & 0xf) == 0) {
                 can_msg_t sensor_msg;
 
                 build_analog_data_msg(
-                    PRIO_LOW, millis(), SENSOR_PRESSURE_CC0, cc1_pressure, &sensor_msg
+                    PRIO_LOW, millis(), SENSOR_PRESSURE_CC0, cc_pressure, &sensor_msg
                 );
                 txb_enqueue(&sensor_msg);
             }
-            cc1_pres_count++;
+            cc_pres_count++;
         }
 #endif
 
@@ -245,7 +235,6 @@ int main(int argc, char **argv) {
             build_analog_data_msg(
                 PRIO_LOW, millis(), SENSOR_FUEL_INJ_HALL, hallsense_fuel_flux, &sensor_msg
             );
-            // TEMPORARY SENDING AS CC PRESSURE
             txb_enqueue(&sensor_msg);
         }
 #endif
@@ -265,6 +254,7 @@ int main(int argc, char **argv) {
 
         // send any queued CAN messages
         txb_heartbeat();
+        //LED_W = LED_W ^ LED_OFF;
     }
 
     return (EXIT_SUCCESS);
@@ -300,12 +290,12 @@ static void send_status_ok(void) {
     txb_enqueue(&board_stat_msg);
 }
 
-// EDIT THIS - NASH: removed anything to do with actuator, left LEDs and board reset
 static void can_msg_handler(const can_msg_t *msg) {
     seen_can_message = true;
     uint16_t msg_type = get_message_type(msg);
     int dest_id = -1;
     int cmd_type = -1;
+//    LED_B = false ^ !LED_OFF;
 
     // ignore messages that were sent from this board
     if (get_board_type_unique_id(msg) == BOARD_TYPE_UNIQUE_ID) {
@@ -315,14 +305,14 @@ static void can_msg_handler(const can_msg_t *msg) {
     switch (msg_type) {
         case MSG_LEDS_ON:
             LED_R = !LED_OFF;
-            LED_Y = !LED_OFF;
-            LED_G = !LED_OFF;
+            LED_W = !LED_OFF;
+            LED_B = !LED_OFF;
             break;
 
         case MSG_LEDS_OFF:
             LED_R = LED_OFF;
-            LED_Y = LED_OFF;
-            LED_G = LED_OFF;
+            LED_W = LED_OFF;
+            LED_B = LED_OFF;
             break;
 
         case MSG_RESET_CMD:

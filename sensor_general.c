@@ -15,9 +15,9 @@ void LED_init(void) {
     TRISA4 = 0;
     LED_R = !LED_OFF;
     TRISA3 = 0;
-    LED_Y = LED_OFF;
+    LED_W = LED_OFF;
     TRISA2 = 0;
-    LED_G = LED_OFF;
+    LED_B = LED_OFF;
 }
 
 

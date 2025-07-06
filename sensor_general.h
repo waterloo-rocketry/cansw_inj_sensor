@@ -5,14 +5,19 @@
 #include <stdint.h>
 
 #define LED_R LATA4 // RA4
-#define LED_Y LATA3
-#define LED_G LATA2
+#define LED_W LATA3
+#define LED_B LATA2
 #define LED_OFF 1
 
 // Initialize LEDS
 void LED_init(void);
 
 void LED_heartbeat_R(void); // Red LED
+
+uint8_t board_error_checks();
+
+
+
 
 // Read pressure sensor ADC and convert to PSI. Replace all negative values with
 // zero since canlib and RLCS don't like it.
