@@ -144,18 +144,24 @@ int main(int argc, char **argv) {
         // heartbeat Red LED to toggle every 500ms if status_ok
         if (millis() - last_millis > STATUS_TIME_DIFF_ms) {
             // check for general board status
-            bool status_ok = true;
+            uint32_t general_error = 0;
+            uint16_t board_error = 0;
 
-            status_ok &= check_5v_current_error(current_sense_5v);
-            status_ok &= check_12v_current_error(current_sense_12v);
-            status_ok &= check_PT_current_error(pres_cc);
-            status_ok &= check_PT_current_error(pres_fuel);
-            status_ok &= check_PT_current_error(pres_ox);
+            general_error &= check_5v_current_error(current_sense_5v) << E_5V_OVER_CURRENT_OFFSET;
+            general_error &= check_12v_current_error(current_sense_12v) << E_12V_OVER_CURRENT_OFFSET;
+            board_error &= check_PT_current_error(pres_cc) << E_CC_PT_INVALID_OFFSET;
+            board_error &= check_PT_current_error(pres_fuel) << E_FUEL_PT_INVALID_OFFSET;
+            board_error &= check_PT_current_error(pres_ox) << E_OX_PT_INVALID_OFFSET;
 
             // if there was an issue, a message would already have been sent out
-            if (status_ok) {
-                send_status_ok();
+            can_msg_t status_msg;
+            can_msg_prio_t prio = PRIO_LOW;
+            if (general_error || board_error)
+            {
+                prio = PRIO_MEDIUM;
             }
+            build_general_board_status_msg(prio, (uint16_t) millis(), general_error, board_error, &status_msg);
+            txb_enqueue(&status_msg);
 
             // Red LED flashes during safe state.
             LED_R = LED_R ^ LED_OFF;

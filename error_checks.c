@@ -26,13 +26,6 @@ bool check_5v_current_error(adcc_channel_t current_channel) {
     uint16_t curr_draw_mA = uV / 62; // 62 is R8 rating in mR
 
     if (curr_draw_mA > BUS_OVERCURRENT_THRESHOLD_mA) {
-        uint32_t timestamp = millis();
-        can_msg_t error_msg;
-
-        build_general_board_status_msg(
-            PRIO_MEDIUM, timestamp, E_5V_OVER_CURRENT_OFFSET, curr_draw_mA, &error_msg
-        );
-        txb_enqueue(&error_msg);
         return false;
     }
 
@@ -47,12 +40,6 @@ bool check_12v_current_error(adcc_channel_t current_channel) {
     uint16_t curr_draw_mA = uV / 15; // 15 is R7 rating in mR
 
     if (curr_draw_mA > BAT_OVERCURRENT_THRESHOLD_mA) {
-        uint32_t timestamp = millis();
-        can_msg_t error_msg;
-        build_general_board_status_msg(
-            PRIO_MEDIUM, timestamp, E_12V_OVER_CURRENT_OFFSET, curr_draw_mA, &error_msg
-        );
-        txb_enqueue(&error_msg);
         return false;
     }
 
@@ -69,12 +56,6 @@ bool check_PT_current_error(adcc_channel_t pt_channel) {
     double current_mA = 1000 * v / r;
 
     if (current_mA < 4 || current_mA > 20) {
-        uint32_t timestamp = millis();
-        can_msg_t error_msg;
-        build_general_board_status_msg(PRIO_MEDIUM, timestamp, 0, 1, &error_msg);
-        txb_enqueue(&error_msg);
-
-        // PT decides to shit itself
         return false;
     }
 
