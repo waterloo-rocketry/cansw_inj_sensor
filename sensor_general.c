@@ -20,7 +20,6 @@ void LED_init(void) {
     LED_B = LED_OFF;
 }
 
-
 // 4-20mA pressure transducer
 uint32_t get_pressure_4_20_psi(adcc_channel_t adc_channel) {
     adc_result_t voltage_raw = ADCC_GetSingleConversion(adc_channel);

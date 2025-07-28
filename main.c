@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
     // Sets fixed reference voltage for ADC to 4.096V, see section 35.0
     SYSTEM_Initialize();
 
-    LED_init(); //Turn all LEDs on
+    LED_init(); // Turn all LEDs on
 
     // init our millisecond function
     timer0_init();
@@ -115,8 +115,6 @@ int main(int argc, char **argv) {
     TRISC0 = 1;
     ANSELC0 = 0;
     CANRXPPS = 0x10;
-    
-    
 
     // set up CAN module
     can_timing_t can_setup;
@@ -148,7 +146,8 @@ int main(int argc, char **argv) {
             uint16_t board_error = 0;
 
             general_error &= check_5v_current_error(current_sense_5v) << E_5V_OVER_CURRENT_OFFSET;
-            general_error &= check_12v_current_error(current_sense_12v) << E_12V_OVER_CURRENT_OFFSET;
+            general_error &= check_12v_current_error(current_sense_12v)
+                             << E_12V_OVER_CURRENT_OFFSET;
             board_error &= check_PT_current_error(pres_cc) << E_CC_PT_INVALID_OFFSET;
             board_error &= check_PT_current_error(pres_fuel) << E_FUEL_PT_INVALID_OFFSET;
             board_error &= check_PT_current_error(pres_ox) << E_OX_PT_INVALID_OFFSET;
@@ -156,11 +155,12 @@ int main(int argc, char **argv) {
             // if there was an issue, a message would already have been sent out
             can_msg_t status_msg;
             can_msg_prio_t prio = PRIO_LOW;
-            if (general_error || board_error)
-            {
+            if (general_error || board_error) {
                 prio = PRIO_MEDIUM;
             }
-            build_general_board_status_msg(prio, (uint16_t) millis(), general_error, board_error, &status_msg);
+            build_general_board_status_msg(
+                prio, (uint16_t)millis(), general_error, board_error, &status_msg
+            );
             txb_enqueue(&status_msg);
 
             // Red LED flashes during safe state.
@@ -260,7 +260,7 @@ int main(int argc, char **argv) {
 
         // send any queued CAN messages
         txb_heartbeat();
-        //LED_W = LED_W ^ LED_OFF;
+        // LED_W = LED_W ^ LED_OFF;
     }
 
     return (EXIT_SUCCESS);
@@ -301,7 +301,7 @@ static void can_msg_handler(const can_msg_t *msg) {
     uint16_t msg_type = get_message_type(msg);
     int dest_id = -1;
     int cmd_type = -1;
-//    LED_B = false ^ !LED_OFF;
+    //    LED_B = false ^ !LED_OFF;
 
     // ignore messages that were sent from this board
     if (get_board_type_unique_id(msg) == BOARD_TYPE_UNIQUE_ID) {
