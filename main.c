@@ -24,16 +24,20 @@
 #define HALLSENSE_FUEL_TIME_DIFF_ms 250 // 4 Hz
 #define HALLSENSE_OX_TIME_DIFF_ms 250 // 4 Hz
 
+// Open Threshold: valve open when above this value, otherwise closed
+#define OX_INJ_HALL_OPEN_THRESHOLD 1000 // TODO: test this value
+#define FUEL_INJ_HALL_OPEN_THRESHOLD 1000 // TODO:test this value
+
 // Sets ADC channels for current sense (these currently cannot be tested without board)
-adcc_channel_t current_sense_5v =
-    channel_ANC4; // NOTE: adcc.h was modified to add register for pin C3 adc
+// NOTE: adcc.h was modified to add register for pin C3 adc
+adcc_channel_t current_sense_5v = channel_ANC4;
 adcc_channel_t current_sense_12v = channel_ANC2;
 
-adcc_channel_t pres_cc = channel_ANB3;
-adcc_channel_t pres_ox = channel_ANB2;
-adcc_channel_t pres_fuel = channel_ANB1;
-adcc_channel_t hallsense_ox = channel_ANC7;
-adcc_channel_t hallsense_fuel = channel_ANC6;
+adcc_channel_t pres_cc = channel_ANB3; // J6 Connector
+adcc_channel_t pres_ox = channel_ANB2; // J8 Connector
+adcc_channel_t pres_fuel = channel_ANB1; // J10 Connector
+adcc_channel_t hallsense_ox = channel_ANC7; // J5 Connector
+adcc_channel_t hallsense_fuel = channel_ANC6; // J9 Connector
 
 double fuel_pres_low_pass = 0;
 double ox_pres_low_pass = 0;
@@ -44,7 +48,6 @@ uint8_t ox_pres_count = 0;
 uint8_t cc_pres_count = 0;
 
 volatile bool seen_can_message = false;
-volatile bool seen_can_command = false;
 
 static void can_msg_handler(const can_msg_t *msg);
 static void send_status_ok(void);
@@ -131,9 +134,6 @@ int main(int argc, char **argv) {
             seen_can_message = false;
             last_message_millis = millis();
         }
-        if (seen_can_command) {
-            seen_can_command = false;
-        }
 
         if ((millis() - last_message_millis) > MAX_BUS_DEAD_TIME_ms) {
             RESET();
@@ -145,21 +145,16 @@ int main(int argc, char **argv) {
             uint32_t general_error = 0;
             uint16_t board_error = 0;
 
-            general_error &= check_5v_current_error(current_sense_5v) << E_5V_OVER_CURRENT_OFFSET;
-            general_error &= check_12v_current_error(current_sense_12v)
+            general_error |= check_5v_current_error(current_sense_5v) << E_5V_OVER_CURRENT_OFFSET;
+            general_error |= check_12v_current_error(current_sense_12v)
                              << E_12V_OVER_CURRENT_OFFSET;
-            board_error &= check_PT_current_error(pres_cc) << E_CC_PT_INVALID_OFFSET;
-            board_error &= check_PT_current_error(pres_fuel) << E_FUEL_PT_INVALID_OFFSET;
-            board_error &= check_PT_current_error(pres_ox) << E_OX_PT_INVALID_OFFSET;
+            board_error |= check_PT_current_error(pres_cc) << E_PT_OUT_OF_RANGE_OFFSET;
+            board_error |= check_PT_current_error(pres_fuel) << E_PT_OUT_OF_RANGE_OFFSET;
+            board_error |= check_PT_current_error(pres_ox) << E_PT_OUT_OF_RANGE_OFFSET;
 
-            // if there was an issue, a message would already have been sent out
             can_msg_t status_msg;
-            can_msg_prio_t prio = PRIO_LOW;
-            if (general_error || board_error) {
-                prio = PRIO_MEDIUM;
-            }
             build_general_board_status_msg(
-                prio, (uint16_t)millis(), general_error, board_error, &status_msg
+                PRIO_MEDIUM, (uint16_t)millis(), general_error, board_error, &status_msg
             );
             txb_enqueue(&status_msg);
 
@@ -280,28 +275,9 @@ static void __interrupt() interrupt_handler() {
     }
 }
 
-// Send a CAN message with nominal status
-static void send_status_ok(void) {
-    can_msg_t board_stat_msg;
-
-    // status_ok indicates no errors
-    uint32_t gen_err_bitfield = 0;
-    uint16_t board_specific_err_bitfield = 0;
-
-    // [TODO] verify priority level of status_ok CAN message
-    build_general_board_status_msg(
-        PRIO_LOW, millis(), gen_err_bitfield, board_specific_err_bitfield, &board_stat_msg
-    );
-
-    txb_enqueue(&board_stat_msg);
-}
-
 static void can_msg_handler(const can_msg_t *msg) {
     seen_can_message = true;
     uint16_t msg_type = get_message_type(msg);
-    int dest_id = -1;
-    int cmd_type = -1;
-    //    LED_B = false ^ !LED_OFF;
 
     // ignore messages that were sent from this board
     if (get_board_type_unique_id(msg) == BOARD_TYPE_UNIQUE_ID) {
@@ -332,4 +308,3 @@ static void can_msg_handler(const can_msg_t *msg) {
             break;
     }
 }
-

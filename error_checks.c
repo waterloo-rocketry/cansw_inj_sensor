@@ -26,11 +26,14 @@ bool check_5v_current_error(adcc_channel_t current_channel) {
     uint16_t curr_draw_mA = uV / 62; // 62 is R8 rating in mR
 
     if (curr_draw_mA > BUS_OVERCURRENT_THRESHOLD_mA) {
-        return false;
+        return true;
     }
 
-    // things look ok
-    return true;
+    can_msg_t msg;
+    build_analog_data_msg(PRIO_LOW, millis(), SENSOR_5V_CURR, curr_draw_mA, &msg);
+    txb_enqueue(&msg);
+
+    return false;
 }
 
 // check battery current error
@@ -40,11 +43,14 @@ bool check_12v_current_error(adcc_channel_t current_channel) {
     uint16_t curr_draw_mA = uV / 15; // 15 is R7 rating in mR
 
     if (curr_draw_mA > BAT_OVERCURRENT_THRESHOLD_mA) {
-        return false;
+        return true;
     }
 
-    // things look ok
-    return true;
+    can_msg_t msg;
+    build_analog_data_msg(PRIO_LOW, millis(), SENSOR_12V_CURR, curr_draw_mA, &msg);
+    txb_enqueue(&msg);
+
+    return false;
 }
 
 // checks if PT current is between 4 and 20 mA
@@ -56,10 +62,8 @@ bool check_PT_current_error(adcc_channel_t pt_channel) {
     double current_mA = 1000 * v / r;
 
     if (current_mA < 4 || current_mA > 20) {
-        return false;
+        return true;
     }
 
-    // current is nominal
-    return true;
+    return false;
 }
-
