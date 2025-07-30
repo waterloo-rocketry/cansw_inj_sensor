@@ -18,9 +18,9 @@
 // Set any of these to zero to disable
 #define STATUS_TIME_DIFF_ms 500
 
-#define PRES_OX_TIME_DIFF_ms 25 // 40 Hz
-#define PRES_FUEL_TIME_DIFF_ms 25 // 40 Hz
-#define PRES_CC_TIME_DIFF_ms 25 // 40 Hz
+#define PRES_OX_TIME_DIFF_ms 10 // 100 Hz
+#define PRES_FUEL_TIME_DIFF_ms 10 // 10 Hz
+#define PRES_CC_TIME_DIFF_ms 10 // 100 Hz
 #define HALLSENSE_FUEL_TIME_DIFF_ms 250 // 4 Hz
 #define HALLSENSE_OX_TIME_DIFF_ms 250 // 4 Hz
 
@@ -167,7 +167,7 @@ int main(int argc, char **argv) {
         if (millis() - last_pres_fuel_millis > PRES_FUEL_TIME_DIFF_ms) {
             last_pres_fuel_millis = millis();
             uint16_t fuel_pressure = update_pressure_psi_low_pass(pres_fuel, &fuel_pres_low_pass);
-            if ((fuel_pres_count & 0xf) == 0) {
+            if ((fuel_pres_count & 0x1) == 0) {
                 can_msg_t sensor_msg;
 
                 build_analog_data_msg(
@@ -183,7 +183,7 @@ int main(int argc, char **argv) {
         if (millis() - last_pres_ox_millis > PRES_OX_TIME_DIFF_ms) {
             last_pres_ox_millis = millis();
             uint16_t ox_pressure = update_pressure_psi_low_pass(pres_ox, &ox_pres_low_pass);
-            if ((ox_pres_count & 0xf) == 0) {
+            if ((ox_pres_count & 0x1) == 0) {
                 can_msg_t sensor_msg;
 
                 build_analog_data_msg(
@@ -199,7 +199,7 @@ int main(int argc, char **argv) {
         if (millis() - last_pres_cc_millis > PRES_CC_TIME_DIFF_ms) {
             last_pres_cc_millis = millis();
             uint16_t cc_pressure = update_pressure_psi_low_pass(pres_cc, &cc_pres_low_pass);
-            if ((cc_pres_count & 0xf) == 0) {
+            if ((cc_pres_count & 0x1) == 0) {
                 can_msg_t sensor_msg;
 
                 build_analog_data_msg(
@@ -215,7 +215,7 @@ int main(int argc, char **argv) {
         if (millis() - last_pres_cc2_millis > PRES_CC2_TIME_DIFF_ms) {
             last_pres_cc2_millis = millis();
             uint16_t cc2_pressure = update_pressure_psi_low_pass(pres_cc2, &cc2_pres_low_pass);
-            if ((cc2_pres_count & 0xf) == 0) {
+            if ((cc2_pres_count & 0x1) == 0) {
                 can_msg_t sensor_msg;
 
                 build_analog_data_msg(

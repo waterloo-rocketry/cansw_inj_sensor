@@ -6,8 +6,7 @@
 
 #include "sensor_general.h"
 
-#define PRES_TIME_DIFF_ms 25 // 40 Hz
-#define PT_OFFSET 0
+#define PRES_TIME_DIFF_ms 10 // 100 Hz
 
 const float VREF = 4.096; // FVR vref
 
@@ -24,6 +23,12 @@ void LED_init(void) {
 uint32_t get_pressure_4_20_psi(adcc_channel_t adc_channel) {
     adc_result_t voltage_raw = ADCC_GetSingleConversion(adc_channel);
 
+	if(voltage_raw < 400) {
+		voltage_raw = 400;
+	} else if(voltage_raw > 2000) {
+		voltage_raw = 2000;
+	}
+	
     float v = (voltage_raw + 0.5f) / 4096.0f * VREF;
 
     const uint16_t r = 100;
@@ -32,8 +37,8 @@ uint32_t get_pressure_4_20_psi(adcc_channel_t adc_channel) {
     double current = v / r;
 
     int32_t pressure_psi = (int32_t)(((current - 0.004) / (0.02 - 0.004)) * pressure_range);
-
-    return (uint32_t)pressure_psi + PT_OFFSET;
+	
+    return (uint32_t)pressure_psi;
 }
 
 // Low-pass filter for 4-20mA pressure transducer
