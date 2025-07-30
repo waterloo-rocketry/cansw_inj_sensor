@@ -6,7 +6,7 @@
 
 #include "sensor_general.h"
 
-#define PRES_TIME_DIFF_ms 50 // 20 Hz
+#define PRES_TIME_DIFF_ms 25 // 40 Hz
 #define PT_OFFSET 0
 
 const float VREF = 4.096; // FVR vref

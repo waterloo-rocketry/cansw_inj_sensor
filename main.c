@@ -18,9 +18,9 @@
 // Set any of these to zero to disable
 #define STATUS_TIME_DIFF_ms 500
 
-#define PRES_OX_TIME_DIFF_ms 50 // 20 Hz
-#define PRES_FUEL_TIME_DIFF_ms 50 // 20 Hz
-#define PRES_CC_TIME_DIFF_ms 50 // 20 Hz
+#define PRES_OX_TIME_DIFF_ms 25 // 40 Hz
+#define PRES_FUEL_TIME_DIFF_ms 25 // 40 Hz
+#define PRES_CC_TIME_DIFF_ms 25 // 40 Hz
 #define HALLSENSE_FUEL_TIME_DIFF_ms 250 // 4 Hz
 #define HALLSENSE_OX_TIME_DIFF_ms 250 // 4 Hz
 
