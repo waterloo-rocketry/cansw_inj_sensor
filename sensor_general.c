@@ -6,8 +6,6 @@
 
 #include "sensor_general.h"
 
-#define PRES_TIME_DIFF_ms 10 // 100 Hz
-
 const float VREF = 4.096; // FVR vref
 
 void LED_init(void) {
@@ -42,16 +40,19 @@ uint32_t get_pressure_4_20_psi(adcc_channel_t adc_channel) {
 }
 
 // Low-pass filter for 4-20mA pressure transducer
-#define SAMPLE_FREQ (1000.0 / PRES_TIME_DIFF_ms)
-#define LOW_PASS_ALPHA(TR) ((SAMPLE_FREQ * TR / 5.0) / (1 + SAMPLE_FREQ * TR / 5.0))
+#define SAMPLE_FREQ(DIFF_ms) (1000.0 / DIFF_ms)
+#define LOW_PASS_ALPHA(TR, DIFF_ms)                                                                \
+    ((SAMPLE_FREQ(DIFF_ms) * TR / 5.0) / (1 + SAMPLE_FREQ(DIFF_ms) * TR / 5.0))
 #define LOW_PASS_RESPONSE_TIME 2.5 // seconds
-volatile double alpha_low = LOW_PASS_ALPHA(LOW_PASS_RESPONSE_TIME);
+#define ALPHA_LOW(DIFF_ms) LOW_PASS_ALPHA(LOW_PASS_RESPONSE_TIME, DIFF_ms)
 
-uint16_t update_pressure_psi_low_pass(adcc_channel_t adc_channel, double *low_pass_pressure_psi) {
+uint16_t update_pressure_psi_low_pass(
+    adcc_channel_t adc_channel, double *low_pass_pressure_psi, uint16_t diff_ms
+) {
     int16_t pressure_psi = get_pressure_4_20_psi(adc_channel);
 
     *low_pass_pressure_psi =
-        alpha_low * (*low_pass_pressure_psi) + (1.0 - alpha_low) * pressure_psi;
+        ALPHA_LOW(diff_ms) * (*low_pass_pressure_psi) + (1.0 - ALPHA_LOW(diff_ms)) * pressure_psi;
 
     return (uint16_t)(*low_pass_pressure_psi);
 }
