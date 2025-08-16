@@ -18,11 +18,17 @@
 // Set any of these to zero to disable
 #define STATUS_TIME_DIFF_ms 500
 
-#define PRES_CH0_TIME_DIFF_ms 3 // Sample at 320 Hz, CAN Transmit at 40 Hz (divisor 8)
-#define PRES_CH1_TIME_DIFF_ms 3 // Sample at 320 Hz, CAN Transmit at 40 Hz (divisor 8)
-#define PRES_CH2_TIME_DIFF_ms 12 // Sample at 80 Hz, CAN Transmit at 10 Hz (divisor 8)
-#define PRES_CH3_TIME_DIFF_ms 12 // Sample at 80 Hz, CAN Transmit at 10 Hz (divisor 8)
-#define PRES_CH4_TIME_DIFF_ms 12 // Sample at 80 Hz, CAN Transmit at 10 Hz (divisor 8)
+#define PRES_CH0_TIME_DIFF_ms 6 // Sample at 160 Hz, CAN Transmit at 40 Hz (divisor 4)
+#define PRES_CH1_TIME_DIFF_ms 50 // Sample at 20 Hz, CAN Transmit at 5 Hz (divisor 4)
+#define PRES_CH2_TIME_DIFF_ms 50 // Sample at 20 Hz, CAN Transmit at 5 Hz (divisor 4)
+#define PRES_CH3_TIME_DIFF_ms 50 // Sample at 20 Hz, CAN Transmit at 5 Hz (divisor 4)
+#define PRES_CH4_TIME_DIFF_ms 50 // Sample at 20 Hz, CAN Transmit at 5 Hz (divisor 4)
+
+#define PRES_CH0_DOWNSAMPLE_MASK 0x3 // 1-in-4
+#define PRES_CH1_DOWNSAMPLE_MASK 0x3 // 1-in-4
+#define PRES_CH2_DOWNSAMPLE_MASK 0x3 // 1-in-4
+#define PRES_CH3_DOWNSAMPLE_MASK 0x3 // 1-in-4
+#define PRES_CH4_DOWNSAMPLE_MASK 0x3 // 1-in-4
 
 #define HALLSENSE_CH0_TIME_DIFF_ms 250 // Sample and transmit at 4 Hz
 #define HALLSENSE_CH1_TIME_DIFF_ms 250 // Sample and transmit at 4 Hz
@@ -108,11 +114,12 @@ int main(int argc, char **argv) {
     uint32_t last_millis = millis();
     uint32_t last_message_millis = 0;
 
-    uint32_t last_pres_ch0_millis = millis();
-    uint32_t last_pres_ch1_millis = millis();
-    uint32_t last_pres_ch2_millis = millis();
-    uint32_t last_pres_ch3_millis = millis();
-    uint32_t last_pres_ch4_millis = millis();
+    // Randomize initial millis to lower peak CAN bus message rate
+    uint32_t last_pres_ch0_millis = 1;
+    uint32_t last_pres_ch1_millis = 2;
+    uint32_t last_pres_ch2_millis = 3;
+    uint32_t last_pres_ch3_millis = 4;
+    uint32_t last_pres_ch4_millis = 5;
 
     uint32_t last_hallsense_ox_millis = millis();
     uint32_t last_hallsense_fuel_millis = millis();
@@ -181,7 +188,7 @@ int main(int argc, char **argv) {
             uint16_t ch0_pressure = update_pressure_psi_low_pass(
                 pres_ch0_port, &pres_ch0_low_pass, PRES_CH0_TIME_DIFF_ms
             );
-            if ((ch0_pres_count & 0x7) == 0) {
+            if ((ch0_pres_count & PRES_CH0_DOWNSAMPLE_MASK) == 0) {
                 can_msg_t sensor_msg;
 
                 build_analog_data_msg(
@@ -199,7 +206,7 @@ int main(int argc, char **argv) {
             uint16_t ch1_pressure = update_pressure_psi_low_pass(
                 pres_ch1_port, &pres_ch1_low_pass, PRES_CH1_TIME_DIFF_ms
             );
-            if ((ch1_pres_count & 0x7) == 0) {
+            if ((ch1_pres_count & PRES_CH1_DOWNSAMPLE_MASK) == 0) {
                 can_msg_t sensor_msg;
 
                 build_analog_data_msg(
@@ -217,7 +224,7 @@ int main(int argc, char **argv) {
             uint16_t ch2_pressure = update_pressure_psi_low_pass(
                 pres_ch2_port, &pres_ch2_low_pass, PRES_CH2_TIME_DIFF_ms
             );
-            if ((ch2_pres_count & 0x7) == 0) {
+            if ((ch2_pres_count & PRES_CH2_DOWNSAMPLE_MASK) == 0) {
                 can_msg_t sensor_msg;
 
                 build_analog_data_msg(
@@ -235,7 +242,7 @@ int main(int argc, char **argv) {
             uint16_t ch3_pressure = update_pressure_psi_low_pass(
                 pres_ch3_port, &pres_ch3_low_pass, PRES_CH3_TIME_DIFF_ms
             );
-            if ((ch3_pres_count & 0x7) == 0) {
+            if ((ch3_pres_count & PRES_CH3_DOWNSAMPLE_MASK) == 0) {
                 can_msg_t sensor_msg;
 
                 build_analog_data_msg(
@@ -253,7 +260,7 @@ int main(int argc, char **argv) {
             uint16_t ch4_pressure = update_pressure_psi_low_pass(
                 pres_ch4_port, &pres_ch4_low_pass, PRES_CH4_TIME_DIFF_ms
             );
-            if ((ch4_pres_count & 0x7) == 0) {
+            if ((ch4_pres_count & PRES_CH4_DOWNSAMPLE_MASK) == 0) {
                 can_msg_t sensor_msg;
 
                 build_analog_data_msg(
