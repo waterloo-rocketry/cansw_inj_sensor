@@ -45,8 +45,9 @@ adcc_channel_t pres_ch2_port = channel_ANB3; // J6 Connector
 adcc_channel_t pres_ch3_port = channel_ANB2; // J8 Connector
 adcc_channel_t pres_ch4_port = channel_ANB1; // J10 Connector
 
-adcc_channel_t hallsense_ox = channel_ANC7; // J5 Connector
-adcc_channel_t hallsense_fuel = channel_ANC6; // J9 Connector
+adcc_channel_t hallsense_ch0_port = channel_ANB0; // J7 Connector
+adcc_channel_t hallsense_ch1_port = channel_ANC7; // J5 Connector
+adcc_channel_t hallsense_ch2_port = channel_ANC6; // J9 Connector
 
 double pres_ch0_low_pass = 0;
 double pres_ch1_low_pass = 0;
@@ -114,15 +115,16 @@ int main(int argc, char **argv) {
     uint32_t last_millis = millis();
     uint32_t last_message_millis = 0;
 
-    // Randomize initial millis to lower peak CAN bus message rate
+    // Stagger initial millis to lower peak CAN bus message rate
     uint32_t last_pres_ch0_millis = 1;
     uint32_t last_pres_ch1_millis = 2;
     uint32_t last_pres_ch2_millis = 3;
     uint32_t last_pres_ch3_millis = 4;
     uint32_t last_pres_ch4_millis = 5;
 
-    uint32_t last_hallsense_ox_millis = millis();
-    uint32_t last_hallsense_fuel_millis = millis();
+    uint32_t last_hallsense_ch0_millis = 6;
+    uint32_t last_hallsense_ch1_millis = 7;
+    uint32_t last_hallsense_ch2_millis = 8;
 
     // Enable global interrupts
     INTCON0bits.GIE = 1;
@@ -272,27 +274,40 @@ int main(int argc, char **argv) {
         }
 #endif
 
-#if HALLSENSE_FUEL_TIME_DIFF_ms
-        if (millis() - last_hallsense_fuel_millis > HALLSENSE_FUEL_TIME_DIFF_ms) {
-            last_hallsense_fuel_millis = millis();
-            uint16_t hallsense_fuel_flux = get_hall_sensor_reading(hallsense_fuel);
+#if HALLSENSE_CH0_TIME_DIFF_ms
+        if (millis() - last_hallsense_ch0_millis > HALLSENSE_CH0_TIME_DIFF_ms) {
+            last_hallsense_ch0_millis = millis();
+            uint16_t hallsense_ch0_flux = get_hall_sensor_reading(hallsense_ch0_port);
             can_msg_t sensor_msg;
 
             build_analog_data_msg(
-                PRIO_LOW, millis(), SENSOR_FUEL_INJ_HALL, hallsense_fuel_flux, &sensor_msg
+                PRIO_LOW, millis(), SENSOR_HALL_CHANNEL_0, hallsense_ch0_flux, &sensor_msg
             );
             txb_enqueue(&sensor_msg);
         }
 #endif
 
-#if HALLSENSE_OX_TIME_DIFF_ms
-        if (millis() - last_hallsense_ox_millis > HALLSENSE_OX_TIME_DIFF_ms) {
-            last_hallsense_ox_millis = millis();
-            uint16_t hallsense_ox_flux = get_hall_sensor_reading(hallsense_ox);
+#if HALLSENSE_CH1_TIME_DIFF_ms
+        if (millis() - last_hallsense_ch1_millis > HALLSENSE_CH1_TIME_DIFF_ms) {
+            last_hallsense_ch1_millis = millis();
+            uint16_t hallsense_ch1_flux = get_hall_sensor_reading(hallsense_ch1_port);
             can_msg_t sensor_msg;
 
             build_analog_data_msg(
-                PRIO_LOW, millis(), SENSOR_OX_INJ_HALL, hallsense_ox_flux, &sensor_msg
+                PRIO_LOW, millis(), SENSOR_HALL_CHANNEL_1, hallsense_ch1_flux, &sensor_msg
+            );
+            txb_enqueue(&sensor_msg);
+        }
+#endif
+
+#if HALLSENSE_CH2_TIME_DIFF_ms
+        if (millis() - last_hallsense_ch2_millis > HALLSENSE_CH2_TIME_DIFF_ms) {
+            last_hallsense_ch2_millis = millis();
+            uint16_t hallsense_ch2_flux = get_hall_sensor_reading(hallsense_ch2_port);
+            can_msg_t sensor_msg;
+
+            build_analog_data_msg(
+                PRIO_LOW, millis(), SENSOR_HALL_CHANNEL_2, hallsense_ch2_flux, &sensor_msg
             );
             txb_enqueue(&sensor_msg);
         }
