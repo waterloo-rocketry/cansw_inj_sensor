@@ -16,9 +16,10 @@ void LED_heartbeat_R(void); // Red LED
 
 uint8_t board_error_checks();
 
-// Read pressure sensor ADC and convert to PSI. Replace all negative values with
-// zero since canlib and RLCS don't like it.
-uint16_t update_pressure_psi_low_pass(adcc_channel_t adc_channel, double *low_pass_pressure_psi);
+uint16_t update_pressure_psi_low_pass(
+    adcc_channel_t adc_channel, double *low_pass_pressure_psi, uint16_t diff_ms
+);
+
 uint16_t get_hall_sensor_reading(adcc_channel_t adc_channel);
 #endif /* SENSOR_GEN_H */
 

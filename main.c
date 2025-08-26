@@ -18,34 +18,48 @@
 // Set any of these to zero to disable
 #define STATUS_TIME_DIFF_ms 500
 
-#define PRES_OX_TIME_DIFF_ms 10 // 100 Hz
-#define PRES_FUEL_TIME_DIFF_ms 10 // 10 Hz
-#define PRES_CC_TIME_DIFF_ms 10 // 100 Hz
-#define HALLSENSE_FUEL_TIME_DIFF_ms 250 // 4 Hz
-#define HALLSENSE_OX_TIME_DIFF_ms 250 // 4 Hz
+#define PRES_CH0_TIME_DIFF_ms 6 // Sample at 160 Hz, CAN Transmit at 40 Hz (divisor 4)
+#define PRES_CH1_TIME_DIFF_ms 50 // Sample at 20 Hz, CAN Transmit at 5 Hz (divisor 4)
+#define PRES_CH2_TIME_DIFF_ms 50 // Sample at 20 Hz, CAN Transmit at 5 Hz (divisor 4)
+#define PRES_CH3_TIME_DIFF_ms 50 // Sample at 20 Hz, CAN Transmit at 5 Hz (divisor 4)
+#define PRES_CH4_TIME_DIFF_ms 50 // Sample at 20 Hz, CAN Transmit at 5 Hz (divisor 4)
 
-// Open Threshold: valve open when above this value, otherwise closed
-#define OX_INJ_HALL_OPEN_THRESHOLD 1000 // TODO: test this value
-#define FUEL_INJ_HALL_OPEN_THRESHOLD 1000 // TODO:test this value
+#define PRES_CH0_DOWNSAMPLE_MASK 0x3 // 1-in-4
+#define PRES_CH1_DOWNSAMPLE_MASK 0x3 // 1-in-4
+#define PRES_CH2_DOWNSAMPLE_MASK 0x3 // 1-in-4
+#define PRES_CH3_DOWNSAMPLE_MASK 0x3 // 1-in-4
+#define PRES_CH4_DOWNSAMPLE_MASK 0x3 // 1-in-4
+
+#define HALLSENSE_CH0_TIME_DIFF_ms 250 // Sample and transmit at 4 Hz
+#define HALLSENSE_CH1_TIME_DIFF_ms 250 // Sample and transmit at 4 Hz
+#define HALLSENSE_CH2_TIME_DIFF_ms 250 // Sample and transmit at 4 Hz
 
 // Sets ADC channels for current sense (these currently cannot be tested without board)
 // NOTE: adcc.h was modified to add register for pin C3 adc
 adcc_channel_t current_sense_5v = channel_ANC4;
 adcc_channel_t current_sense_12v = channel_ANC2;
 
-adcc_channel_t pres_cc = channel_ANB3; // J6 Connector
-adcc_channel_t pres_ox = channel_ANB2; // J8 Connector
-adcc_channel_t pres_fuel = channel_ANB1; // J10 Connector
-adcc_channel_t hallsense_ox = channel_ANC7; // J5 Connector
-adcc_channel_t hallsense_fuel = channel_ANC6; // J9 Connector
+adcc_channel_t pres_ch0_port = channel_ANA1; // J3 Connector
+adcc_channel_t pres_ch1_port = channel_ANA0; // J4 Connector
+adcc_channel_t pres_ch2_port = channel_ANB3; // J6 Connector
+adcc_channel_t pres_ch3_port = channel_ANB2; // J8 Connector
+adcc_channel_t pres_ch4_port = channel_ANB1; // J10 Connector
 
-double fuel_pres_low_pass = 0;
-double ox_pres_low_pass = 0;
-double cc_pres_low_pass = 0;
+adcc_channel_t hallsense_ch0_port = channel_ANB0; // J7 Connector
+adcc_channel_t hallsense_ch1_port = channel_ANC7; // J5 Connector
+adcc_channel_t hallsense_ch2_port = channel_ANC6; // J9 Connector
 
-uint8_t fuel_pres_count = 0;
-uint8_t ox_pres_count = 0;
-uint8_t cc_pres_count = 0;
+double pres_ch0_low_pass = 0;
+double pres_ch1_low_pass = 0;
+double pres_ch2_low_pass = 0;
+double pres_ch3_low_pass = 0;
+double pres_ch4_low_pass = 0;
+
+uint8_t ch0_pres_count = 0;
+uint8_t ch1_pres_count = 0;
+uint8_t ch2_pres_count = 0;
+uint8_t ch3_pres_count = 0;
+uint8_t ch4_pres_count = 0;
 
 volatile bool seen_can_message = false;
 
@@ -101,11 +115,16 @@ int main(int argc, char **argv) {
     uint32_t last_millis = millis();
     uint32_t last_message_millis = 0;
 
-    uint32_t last_pres_cc_millis = millis();
-    uint32_t last_pres_ox_millis = millis();
-    uint32_t last_pres_fuel_millis = millis();
-    uint32_t last_hallsense_ox_millis = millis();
-    uint32_t last_hallsense_fuel_millis = millis();
+    // Stagger initial millis to lower peak CAN bus message rate
+    uint32_t last_pres_ch0_millis = 1;
+    uint32_t last_pres_ch1_millis = 2;
+    uint32_t last_pres_ch2_millis = 3;
+    uint32_t last_pres_ch3_millis = 4;
+    uint32_t last_pres_ch4_millis = 5;
+
+    uint32_t last_hallsense_ch0_millis = 6;
+    uint32_t last_hallsense_ch1_millis = 7;
+    uint32_t last_hallsense_ch2_millis = 8;
 
     // Enable global interrupts
     INTCON0bits.GIE = 1;
@@ -148,9 +167,11 @@ int main(int argc, char **argv) {
             general_error |= check_5v_current_error(current_sense_5v) << E_5V_OVER_CURRENT_OFFSET;
             general_error |= check_12v_current_error(current_sense_12v)
                              << E_12V_OVER_CURRENT_OFFSET;
-            board_error |= check_PT_current_error(pres_cc) << E_PT_OUT_OF_RANGE_OFFSET;
-            board_error |= check_PT_current_error(pres_fuel) << E_PT_OUT_OF_RANGE_OFFSET;
-            board_error |= check_PT_current_error(pres_ox) << E_PT_OUT_OF_RANGE_OFFSET;
+            board_error |= check_PT_current_error(pres_ch0_port) << E_PT_OUT_OF_RANGE_OFFSET;
+            board_error |= check_PT_current_error(pres_ch1_port) << E_PT_OUT_OF_RANGE_OFFSET;
+            board_error |= check_PT_current_error(pres_ch2_port) << E_PT_OUT_OF_RANGE_OFFSET;
+            board_error |= check_PT_current_error(pres_ch3_port) << E_PT_OUT_OF_RANGE_OFFSET;
+            board_error |= check_PT_current_error(pres_ch4_port) << E_PT_OUT_OF_RANGE_OFFSET;
 
             can_msg_t status_msg;
             build_general_board_status_msg(
@@ -163,91 +184,130 @@ int main(int argc, char **argv) {
             last_millis = millis();
         }
 
-#if PRES_FUEL_TIME_DIFF_ms
-        if (millis() - last_pres_fuel_millis > PRES_FUEL_TIME_DIFF_ms) {
-            last_pres_fuel_millis = millis();
-            uint16_t fuel_pressure = update_pressure_psi_low_pass(pres_fuel, &fuel_pres_low_pass);
-            if ((fuel_pres_count & 0x1) == 0) {
+#if PRES_CH0_TIME_DIFF_ms
+        if (millis() - last_pres_ch0_millis > PRES_CH0_TIME_DIFF_ms) {
+            last_pres_ch0_millis = millis();
+            uint16_t ch0_pressure = update_pressure_psi_low_pass(
+                pres_ch0_port, &pres_ch0_low_pass, PRES_CH0_TIME_DIFF_ms
+            );
+            if ((ch0_pres_count & PRES_CH0_DOWNSAMPLE_MASK) == 0) {
                 can_msg_t sensor_msg;
 
                 build_analog_data_msg(
-                    PRIO_LOW, millis(), SENSOR_PRESSURE_FUEL, fuel_pressure, &sensor_msg
+                    PRIO_LOW, millis(), SENSOR_PT_CHANNEL_0, ch0_pressure, &sensor_msg
                 );
                 txb_enqueue(&sensor_msg);
             }
-            fuel_pres_count++;
+            ch0_pres_count++;
         }
 #endif
 
-#if PRES_OX_TIME_DIFF_ms
-        if (millis() - last_pres_ox_millis > PRES_OX_TIME_DIFF_ms) {
-            last_pres_ox_millis = millis();
-            uint16_t ox_pressure = update_pressure_psi_low_pass(pres_ox, &ox_pres_low_pass);
-            if ((ox_pres_count & 0x1) == 0) {
+#if PRES_CH1_TIME_DIFF_ms
+        if (millis() - last_pres_ch1_millis > PRES_CH1_TIME_DIFF_ms) {
+            last_pres_ch1_millis = millis();
+            uint16_t ch1_pressure = update_pressure_psi_low_pass(
+                pres_ch1_port, &pres_ch1_low_pass, PRES_CH1_TIME_DIFF_ms
+            );
+            if ((ch1_pres_count & PRES_CH1_DOWNSAMPLE_MASK) == 0) {
                 can_msg_t sensor_msg;
 
                 build_analog_data_msg(
-                    PRIO_LOW, millis(), SENSOR_PRESSURE_OX, ox_pressure, &sensor_msg
+                    PRIO_LOW, millis(), SENSOR_PT_CHANNEL_1, ch1_pressure, &sensor_msg
                 );
                 txb_enqueue(&sensor_msg);
             }
-            ox_pres_count++;
+            ch1_pres_count++;
         }
 #endif
 
-#if PRES_CC_TIME_DIFF_ms
-        if (millis() - last_pres_cc_millis > PRES_CC_TIME_DIFF_ms) {
-            last_pres_cc_millis = millis();
-            uint16_t cc_pressure = update_pressure_psi_low_pass(pres_cc, &cc_pres_low_pass);
-            if ((cc_pres_count & 0x1) == 0) {
+#if PRES_CH2_TIME_DIFF_ms
+        if (millis() - last_pres_ch2_millis > PRES_CH2_TIME_DIFF_ms) {
+            last_pres_ch2_millis = millis();
+            uint16_t ch2_pressure = update_pressure_psi_low_pass(
+                pres_ch2_port, &pres_ch2_low_pass, PRES_CH2_TIME_DIFF_ms
+            );
+            if ((ch2_pres_count & PRES_CH2_DOWNSAMPLE_MASK) == 0) {
                 can_msg_t sensor_msg;
 
                 build_analog_data_msg(
-                    PRIO_LOW, millis(), SENSOR_PRESSURE_CC0, cc_pressure, &sensor_msg
+                    PRIO_LOW, millis(), SENSOR_PT_CHANNEL_2, ch2_pressure, &sensor_msg
                 );
                 txb_enqueue(&sensor_msg);
             }
-            cc_pres_count++;
+            ch2_pres_count++;
         }
 #endif
 
-#if PRES_CC2_TIME_DIFF_ms
-        if (millis() - last_pres_cc2_millis > PRES_CC2_TIME_DIFF_ms) {
-            last_pres_cc2_millis = millis();
-            uint16_t cc2_pressure = update_pressure_psi_low_pass(pres_cc2, &cc2_pres_low_pass);
-            if ((cc2_pres_count & 0x1) == 0) {
+#if PRES_CH3_TIME_DIFF_ms
+        if (millis() - last_pres_ch3_millis > PRES_CH3_TIME_DIFF_ms) {
+            last_pres_ch3_millis = millis();
+            uint16_t ch3_pressure = update_pressure_psi_low_pass(
+                pres_ch3_port, &pres_ch3_low_pass, PRES_CH3_TIME_DIFF_ms
+            );
+            if ((ch3_pres_count & PRES_CH3_DOWNSAMPLE_MASK) == 0) {
                 can_msg_t sensor_msg;
 
                 build_analog_data_msg(
-                    PRIO_LOW, millis(), SENSOR_PRESSURE_CC1, cc2_pressure, &sensor_msg
+                    PRIO_LOW, millis(), SENSOR_PT_CHANNEL_3, ch3_pressure, &sensor_msg
                 );
                 txb_enqueue(&sensor_msg);
             }
-            cc2_pres_count++;
+            ch3_pres_count++;
         }
 #endif
 
-#if HALLSENSE_FUEL_TIME_DIFF_ms
-        if (millis() - last_hallsense_fuel_millis > HALLSENSE_FUEL_TIME_DIFF_ms) {
-            last_hallsense_fuel_millis = millis();
-            uint16_t hallsense_fuel_flux = get_hall_sensor_reading(hallsense_fuel);
+#if PRES_CH4_TIME_DIFF_ms
+        if (millis() - last_pres_ch4_millis > PRES_CH4_TIME_DIFF_ms) {
+            last_pres_ch4_millis = millis();
+            uint16_t ch4_pressure = update_pressure_psi_low_pass(
+                pres_ch4_port, &pres_ch4_low_pass, PRES_CH4_TIME_DIFF_ms
+            );
+            if ((ch4_pres_count & PRES_CH4_DOWNSAMPLE_MASK) == 0) {
+                can_msg_t sensor_msg;
+
+                build_analog_data_msg(
+                    PRIO_LOW, millis(), SENSOR_PT_CHANNEL_4, ch4_pressure, &sensor_msg
+                );
+                txb_enqueue(&sensor_msg);
+            }
+            ch4_pres_count++;
+        }
+#endif
+
+#if HALLSENSE_CH0_TIME_DIFF_ms
+        if (millis() - last_hallsense_ch0_millis > HALLSENSE_CH0_TIME_DIFF_ms) {
+            last_hallsense_ch0_millis = millis();
+            uint16_t hallsense_ch0_flux = get_hall_sensor_reading(hallsense_ch0_port);
             can_msg_t sensor_msg;
 
             build_analog_data_msg(
-                PRIO_LOW, millis(), SENSOR_FUEL_INJ_HALL, hallsense_fuel_flux, &sensor_msg
+                PRIO_LOW, millis(), SENSOR_HALL_CHANNEL_0, hallsense_ch0_flux, &sensor_msg
             );
             txb_enqueue(&sensor_msg);
         }
 #endif
 
-#if HALLSENSE_OX_TIME_DIFF_ms
-        if (millis() - last_hallsense_ox_millis > HALLSENSE_OX_TIME_DIFF_ms) {
-            last_hallsense_ox_millis = millis();
-            uint16_t hallsense_ox_flux = get_hall_sensor_reading(hallsense_ox);
+#if HALLSENSE_CH1_TIME_DIFF_ms
+        if (millis() - last_hallsense_ch1_millis > HALLSENSE_CH1_TIME_DIFF_ms) {
+            last_hallsense_ch1_millis = millis();
+            uint16_t hallsense_ch1_flux = get_hall_sensor_reading(hallsense_ch1_port);
             can_msg_t sensor_msg;
 
             build_analog_data_msg(
-                PRIO_LOW, millis(), SENSOR_OX_INJ_HALL, hallsense_ox_flux, &sensor_msg
+                PRIO_LOW, millis(), SENSOR_HALL_CHANNEL_1, hallsense_ch1_flux, &sensor_msg
+            );
+            txb_enqueue(&sensor_msg);
+        }
+#endif
+
+#if HALLSENSE_CH2_TIME_DIFF_ms
+        if (millis() - last_hallsense_ch2_millis > HALLSENSE_CH2_TIME_DIFF_ms) {
+            last_hallsense_ch2_millis = millis();
+            uint16_t hallsense_ch2_flux = get_hall_sensor_reading(hallsense_ch2_port);
+            can_msg_t sensor_msg;
+
+            build_analog_data_msg(
+                PRIO_LOW, millis(), SENSOR_HALL_CHANNEL_2, hallsense_ch2_flux, &sensor_msg
             );
             txb_enqueue(&sensor_msg);
         }
